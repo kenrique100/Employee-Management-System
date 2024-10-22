@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -25,9 +26,9 @@ public class DirectorServiceImpl implements DirectorService {
                 .name(userDTO.getName())
                 .age(userDTO.getAge())
                 .gender(userDTO.getGender())
-                .specialty(userDTO.getSpecialty())
+                .specialty(userDTO.getSpecialty())  // Ensure specialty is defined
                 .dateOfEmployment(userDTO.getDateOfEmployment())
-                .roles(userDTO.getRoles())
+                .roles(Arrays.asList(userDTO.getRoles()))  // Convert roles array to list
                 .build();
         return Mono.just(userRepository.save(user));
     }
@@ -40,20 +41,20 @@ public class DirectorServiceImpl implements DirectorService {
                     user.setName(userDTO.getName());
                     user.setAge(userDTO.getAge());
                     user.setGender(userDTO.getGender());
-                    user.setSpecialty(userDTO.getSpecialty());
+                    user.setSpecialty(userDTO.getSpecialty());  // Ensure this setter exists
                     user.setDateOfEmployment(userDTO.getDateOfEmployment());
-                    user.setRoles(userDTO.getRoles());
+                    user.setRoles(Arrays.asList(userDTO.getRoles()));  // Convert roles array to list
                     return userRepository.save(user);
                 });
     }
 
     @Override
     public Mono<Void> deleteUser(Long id) {
-        return Mono.just(userRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)))
-                .map(user -> {
+        return Mono.justOrEmpty(userRepository.findById(id))
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with id: " + id)))
+                .flatMap(user -> {
                     userRepository.delete(user);
-                    return Mono.empty();
+                    return Mono.empty();  // Return an empty Mono<Void>
                 });
     }
 

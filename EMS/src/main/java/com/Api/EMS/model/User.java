@@ -1,51 +1,84 @@
 package com.Api.EMS.model;
 
-import com.Api.EMS.security.Role;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import java.time.LocalDate;
-import java.util.Set;
+import lombok.Builder;
+import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-@Data
+import jakarta.persistence.*;
+import java.util.Collection;
+import java.util.List;
+
 @Entity
-@Table(name = "users")
+@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
+    private String username;
+
+    private String password;
+
     private String guid;
-
-    @NotBlank(message = "Name is required")
     private String name;
-
-    @Min(18)
-    @Max(80)
     private int age;
+    private String gender;
+    private String nationalIdNumber;
+    private String dateOfEmployment;
 
-    @NotBlank(message = "Gender is required")
-    private String gender; // 'male' or 'female'
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles;
 
-    @NotBlank(message = "Specialty is required")
+    public User() {}
+    // Specialty field
     private String specialty;
 
-    @NotNull
-    private LocalDate dateOfEmployment;
+    // Builder class with specialty setter
+    public static class UserBuilder {
+        private String specialty;
 
-    private String profilePictureUrl;
+        public UserBuilder specialty(String specialty) {
+            this.specialty = specialty;
+            return this;
+        }
+    }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream().map(role -> (GrantedAuthority) () -> "ROLE_" + role).toList();
+    }
 
-    private String documentUrl;
+    // UserDetails methods
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
 
-    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
-    @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
+    @Override
+    public String getUsername() {
+        return this.username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

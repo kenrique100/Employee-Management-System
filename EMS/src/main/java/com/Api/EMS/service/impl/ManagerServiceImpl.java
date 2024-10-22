@@ -6,6 +6,7 @@ import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.service.ManagerService;
 import com.Api.EMS.utils.GUIDGenerator;
+import com.Api.EMS.validation.UserValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,9 +18,11 @@ import java.util.List;
 public class ManagerServiceImpl implements ManagerService {
 
     private final UserRepository userRepository;
+    private final UserValidation userValidation; // Inject UserValidation
 
     @Override
     public Mono<User> createUser(UserDTO userDTO) {
+        userValidation.validateUser(userDTO); // Validate user before creation
         User user = User.builder()
                 .guid(GUIDGenerator.generateGUID(8))
                 .name(userDTO.getName())
@@ -42,18 +45,18 @@ public class ManagerServiceImpl implements ManagerService {
                     user.setGender(userDTO.getGender());
                     user.setSpecialty(userDTO.getSpecialty());
                     user.setDateOfEmployment(userDTO.getDateOfEmployment());
-                    user.setRoles(userDTO.getRoles());
+                    user.setRoles(userDTO.getRoles()); // Ensure userDTO.getRoles() returns List<String>
                     return userRepository.save(user);
                 });
     }
 
     @Override
     public Mono<Void> deleteUser(Long id) {
-        return Mono.just(userRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)))
-                .map(user -> {
+        return Mono.justOrEmpty(userRepository.findById(id))
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with id: " + id)))
+                .flatMap(user -> {
                     userRepository.delete(user);
-                    return Mono.empty();
+                    return Mono.empty();  // Return an empty Mono<Void>
                 });
     }
 

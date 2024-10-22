@@ -1,15 +1,13 @@
 package com.Api.EMS.model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.GenerationType;
+import org.springframework.data.annotation.Id;
 import lombok.*;
-import java.time.LocalDate;
+import java.util.Date;
 
-@Data
 @Entity
-@Table(name = "tasks")
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data
 public class Task {
 
     @Id
@@ -18,9 +16,6 @@ public class Task {
 
     private String title;
     private String description;
-
-    private LocalDate dueDate;
-
-    private String createdBy; // Admin, Director, Manager
-    private String assignedTo; // Employee, Manager
+    private Date dueDate;
+    private Date creationDate;
 }

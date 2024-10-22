@@ -1,0 +1,102 @@
+2024-10-22 09:42:03 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 09:42:04 - Starting EmsApplication using Java 17.0.7 with PID 11145 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 09:42:04 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 09:42:07 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-10-22 09:42:07 - Finished Spring Data repository scanning in 250 ms. Found 2 JPA repository interfaces.
+2024-10-22 09:42:09 - Initializing ProtocolHandler ["http-nio-8080"]
+2024-10-22 09:42:09 - Starting service [Tomcat]
+2024-10-22 09:42:09 - Starting Servlet engine: [Apache Tomcat/10.1.30]
+2024-10-22 09:42:09 - Initializing Spring embedded WebApplicationContext
+2024-10-22 09:42:09 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-10-22 09:42:09 - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-10-22 09:42:09 - HHH000026: Second-level cache disabled
+2024-10-22 09:42:10 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-10-22 09:42:10 - HikariPool-1 - Starting...
+2024-10-22 09:42:11 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1bcd702
+2024-10-22 09:42:11 - HikariPool-1 - Start completed.
+2024-10-22 09:42:11 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-10-22 09:42:11 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2024-10-22 09:42:13 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-10-22 09:42:14 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 09:42:16 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 09:42:16 - HikariPool-1 - Shutdown initiated...
+2024-10-22 09:42:16 - HikariPool-1 - Shutdown completed.
+2024-10-22 09:42:16 - Stopping service [Tomcat]
+2024-10-22 09:42:55 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 09:42:55 - Starting EmsApplication using Java 17.0.7 with PID 11330 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 09:42:55 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 09:42:59 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-10-22 09:42:59 - Finished Spring Data repository scanning in 431 ms. Found 2 JPA repository interfaces.
+2024-10-22 09:43:01 - Initializing ProtocolHandler ["http-nio-8080"]
+2024-10-22 09:43:01 - Starting service [Tomcat]
+2024-10-22 09:43:01 - Starting Servlet engine: [Apache Tomcat/10.1.30]
+2024-10-22 09:43:01 - Initializing Spring embedded WebApplicationContext
+2024-10-22 09:43:02 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-10-22 09:43:02 - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-10-22 09:43:02 - HHH000026: Second-level cache disabled
+2024-10-22 09:43:03 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-10-22 09:43:03 - HikariPool-1 - Starting...
+2024-10-22 09:43:03 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1540bdb7
+2024-10-22 09:43:03 - HikariPool-1 - Start completed.
+2024-10-22 09:43:03 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-10-22 09:43:03 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2024-10-22 09:43:05 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-10-22 09:43:05 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 09:43:08 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 09:43:08 - HikariPool-1 - Shutdown initiated...
+2024-10-22 09:43:08 - HikariPool-1 - Shutdown completed.
+2024-10-22 09:43:08 - Stopping service [Tomcat]
+2024-10-22 13:14:19 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 13:14:19 - Starting EmsApplication using Java 17.0.7 with PID 25101 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 13:14:19 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 13:16:07 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 13:16:08 - Starting EmsApplication using Java 17.0.7 with PID 25253 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 13:16:08 - Running with Spring Boot v3.3.4, Spring v6.1.13
+2024-10-22 13:16:08 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 13:16:11 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-10-22 13:16:11 - Finished Spring Data repository scanning in 682 ms. Found 2 JPA repository interfaces.
+2024-10-22 13:16:13 - Initializing ProtocolHandler ["http-nio-8080"]
+2024-10-22 13:16:13 - Starting service [Tomcat]
+2024-10-22 13:16:13 - Starting Servlet engine: [Apache Tomcat/10.1.30]
+2024-10-22 13:16:13 - Initializing Spring embedded WebApplicationContext
+2024-10-22 13:16:14 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-10-22 13:16:14 - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-10-22 13:16:14 - HHH000026: Second-level cache disabled
+2024-10-22 13:16:15 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-10-22 13:16:15 - HikariPool-1 - Starting...
+2024-10-22 13:16:17 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7b58a74b
+2024-10-22 13:16:17 - HikariPool-1 - Start completed.
+2024-10-22 13:16:17 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-10-22 13:16:17 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2024-10-22 13:16:19 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-10-22 13:16:26 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 13:16:27 - Filter 'jwtRequestFilter' configured for use
+2024-10-22 13:16:27 - Global AuthenticationManager configured with UserDetailsService bean with name jwtUserDetailsService
+2024-10-22 13:16:29 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 13:16:29 - HikariPool-1 - Shutdown initiated...
+2024-10-22 13:16:30 - HikariPool-1 - Shutdown completed.
+2024-10-22 13:16:30 - Stopping service [Tomcat]
+2024-10-22 13:22:23 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 13:22:24 - Starting EmsApplication using Java 17.0.7 with PID 26117 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 13:22:24 - Running with Spring Boot v3.3.4, Spring v6.1.13
+2024-10-22 13:22:24 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 14:02:53 - HV000001: Hibernate Validator 8.0.1.Final
+2024-10-22 14:02:53 - Starting EmsApplication using Java 17.0.7 with PID 28409 (/home/akentech/Desktop/my apps/Employee-Management-System/EMS/target/classes started by akentech in /home/akentech/Desktop/my apps/Employee-Management-System/EMS)
+2024-10-22 14:02:53 - Running with Spring Boot v3.3.4, Spring v6.1.13
+2024-10-22 14:02:53 - No active profile set, falling back to 1 default profile: "default"
+2024-10-22 14:02:55 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-10-22 14:02:55 - Finished Spring Data repository scanning in 243 ms. Found 2 JPA repository interfaces.
+2024-10-22 14:02:57 - HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-10-22 14:02:57 - HHH000412: Hibernate ORM core version 6.5.3.Final
+2024-10-22 14:02:57 - HHH000026: Second-level cache disabled
+2024-10-22 14:02:58 - No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-10-22 14:02:58 - HikariPool-1 - Starting...
+2024-10-22 14:02:58 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@23a6c138
+2024-10-22 14:02:58 - HikariPool-1 - Start completed.
+2024-10-22 14:02:58 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-10-22 14:02:58 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2024-10-22 14:03:00 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-10-22 14:03:00 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 14:03:01 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-10-22 14:03:01 - HikariPool-1 - Shutdown initiated...
+2024-10-22 14:03:01 - HikariPool-1 - Shutdown completed.
