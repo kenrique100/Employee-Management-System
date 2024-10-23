@@ -33,9 +33,28 @@ public class User implements UserDetails {
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles;
 
-    public User() {}
     // Specialty field
     private String specialty;
+
+    // No-arg constructor
+    public User() {}
+
+    // All-args constructor for fields
+    public User(Long id, String username, String password, String guid, String name, int age,
+                String gender, String nationalIdNumber, String dateOfEmployment,
+                List<String> roles, String specialty) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.guid = guid;
+        this.name = name;
+        this.age = age;
+        this.gender = gender;
+        this.nationalIdNumber = nationalIdNumber;
+        this.dateOfEmployment = dateOfEmployment;
+        this.roles = roles;
+        this.specialty = specialty;
+    }
 
     // Builder class with specialty setter
     public static class UserBuilder {
@@ -46,6 +65,7 @@ public class User implements UserDetails {
             return this;
         }
     }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream().map(role -> (GrantedAuthority) () -> "ROLE_" + role).toList();

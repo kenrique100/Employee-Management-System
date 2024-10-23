@@ -1,9 +1,7 @@
 package com.Api.EMS.model;
 
 import jakarta.persistence.*;
-import jakarta.persistence.GenerationType;
-import org.springframework.data.annotation.Id;
-import lombok.*;
+import lombok.Data;
 import java.util.Date;
 
 @Entity
@@ -18,4 +16,5 @@ public class Task {
     private String description;
     private Date dueDate;
     private Date creationDate;
+
 }

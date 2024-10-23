@@ -25,7 +25,7 @@ public class AdminServiceImpl implements AdminService {
         user.setGender(userDTO.getGender());
         user.setNationalIdNumber(userDTO.getNationalIdNumber());
         user.setDateOfEmployment(userDTO.getDateOfEmployment());
-        user.setRoles(List.of(userDTO.getRoles()));
+        user.setRoles(userDTO.getRoles());  // No need to wrap in List.of()
         return Mono.just(userRepository.save(user));
     }
 
@@ -37,7 +37,7 @@ public class AdminServiceImpl implements AdminService {
             user.setGender(userDTO.getGender());
             user.setNationalIdNumber(userDTO.getNationalIdNumber());
             user.setDateOfEmployment(userDTO.getDateOfEmployment());
-            user.setRoles(List.of(userDTO.getRoles()));
+            user.setRoles(userDTO.getRoles());  // No need to wrap in List.of()
             return Mono.just(userRepository.save(user));
         });
     }

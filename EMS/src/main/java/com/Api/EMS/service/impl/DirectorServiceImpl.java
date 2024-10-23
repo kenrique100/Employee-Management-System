@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -26,9 +25,9 @@ public class DirectorServiceImpl implements DirectorService {
                 .name(userDTO.getName())
                 .age(userDTO.getAge())
                 .gender(userDTO.getGender())
-                .specialty(userDTO.getSpecialty())  // Ensure specialty is defined
+                .specialty(userDTO.getSpecialty())  // Ensure the setter exists in the User model
                 .dateOfEmployment(userDTO.getDateOfEmployment())
-                .roles(Arrays.asList(userDTO.getRoles()))  // Convert roles array to list
+                .roles(userDTO.getRoles())  // Directly use userDTO.getRoles()
                 .build();
         return Mono.just(userRepository.save(user));
     }
@@ -41,9 +40,9 @@ public class DirectorServiceImpl implements DirectorService {
                     user.setName(userDTO.getName());
                     user.setAge(userDTO.getAge());
                     user.setGender(userDTO.getGender());
-                    user.setSpecialty(userDTO.getSpecialty());  // Ensure this setter exists
+                    user.setSpecialty(userDTO.getSpecialty());  // Ensure this setter exists in the User model
                     user.setDateOfEmployment(userDTO.getDateOfEmployment());
-                    user.setRoles(Arrays.asList(userDTO.getRoles()));  // Convert roles array to list
+                    user.setRoles(userDTO.getRoles());  // Directly use userDTO.getRoles()
                     return userRepository.save(user);
                 });
     }
