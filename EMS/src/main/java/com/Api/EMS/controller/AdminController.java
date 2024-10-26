@@ -1,45 +1,69 @@
 package com.Api.EMS.controller;
 
+import com.Api.EMS.dto.AuthRequest;
+import com.Api.EMS.dto.AuthResponse;
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
 import com.Api.EMS.service.AdminService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.AuthService;
+import com.Api.EMS.utils.ResponseUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
-    @Autowired
-    private AdminService adminService;
+    private final AdminService adminService;
+    private final AuthService authService;
+    private final ResponseUtil responseUtil;
+
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
+        return authService.signup(authRequest)
+                .map(responseUtil::createSuccessResponse)
+                .onErrorResume(e -> {
+                    AuthResponse errorResponse = new AuthResponse("Registration failed");
+                    return Mono.just(responseUtil.createErrorResponse(errorResponse, HttpStatus.BAD_REQUEST));
+                });
+    }
 
     @PostMapping("/user")
-    public ResponseEntity<User> createUser(@RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(adminService.createUser(userDTO).block());
-    }
-
-    @PutMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(adminService.updateUser(id, userDTO).block());
-    }
-
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        adminService.deleteUser(id).block();
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
+        return adminService.createUser(userDTO)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    public Flux<User> getAllUsers() {
+        return adminService.getAllUsers();
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> findUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.findUserById(id).block());
+    public Mono<ResponseEntity<User>> getUserById(@PathVariable Long id) {
+        return adminService.findUserById(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/user/{id}")
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+        return adminService.updateUser(id, userDTO)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build())
+                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
+    }
+
+    @DeleteMapping("/user/{id}")
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
+        return adminService.deleteUser(id)
+                .then(Mono.just(ResponseEntity.ok().<Void>build()))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

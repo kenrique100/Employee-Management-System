@@ -1,24 +1,28 @@
 package com.Api.EMS.security;
 
+import com.Api.EMS.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.security.core.GrantedAuthority;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.Date;
 
 @Component
+@Getter // Use @Getter if you need to access SECRET_KEY from outside, otherwise you can skip it
 public class JwtTokenProvider {
 
-    private final String SECRET_KEY = "secret";
-    private final long EXPIRATION_TIME = 86400000; // 1 day
+    @Value("${jwt.secret}")
+    private String SECRET_KEY;  // This will be injected from application.properties
 
-    public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
+    private final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
+
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(username)
-                .claim("roles", authorities)
+                .setSubject(user.getUsername())
+                .claim("roles", user.getRoles())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS512, SECRET_KEY)

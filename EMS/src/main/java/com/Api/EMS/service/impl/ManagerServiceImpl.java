@@ -1,73 +1,79 @@
 package com.Api.EMS.service.impl;
 
 import com.Api.EMS.dto.UserDTO;
-import com.Api.EMS.exception.ResourceNotFoundException;
 import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.service.ManagerService;
 import com.Api.EMS.utils.GUIDGenerator;
 import com.Api.EMS.validation.UserValidation;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @Service
-@RequiredArgsConstructor
 public class ManagerServiceImpl implements ManagerService {
 
     private final UserRepository userRepository;
-    private final UserValidation userValidation; // Inject UserValidation
+    private final UserValidation userValidation;
 
-    @Override
-    public Mono<User> createUser(UserDTO userDTO) {
-        userValidation.validateUser(userDTO); // Validate user before creation
-        User user = User.builder()
-                .guid(GUIDGenerator.generateGUID(8))
-                .name(userDTO.getName())
-                .age(userDTO.getAge())
-                .gender(userDTO.getGender())
-                .specialty(userDTO.getSpecialty())
-                .dateOfEmployment(userDTO.getDateOfEmployment())
-                .roles(userDTO.getRoles())
-                .build();
-        return Mono.just(userRepository.save(user));
+    public ManagerServiceImpl(UserRepository userRepository, UserValidation userValidation) {
+        this.userRepository = userRepository;
+        this.userValidation = userValidation;
     }
 
     @Override
-    public Mono<User> updateUser(Long id, UserDTO userDTO) {
-        return Mono.just(userRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)))
-                .map(user -> {
-                    user.setName(userDTO.getName());
-                    user.setAge(userDTO.getAge());
-                    user.setGender(userDTO.getGender());
-                    user.setSpecialty(userDTO.getSpecialty());
-                    user.setDateOfEmployment(userDTO.getDateOfEmployment());
-                    user.setRoles(userDTO.getRoles()); // Ensure userDTO.getRoles() returns List<String>
-                    return userRepository.save(user);
+    public Mono<User> createUser(UserDTO<String> userDTO) {
+        userValidation.validateUser(userDTO);
+        User user = populateUserFields(new User(), userDTO);
+        user.setGuid(GUIDGenerator.generateGUID(8));
+        return saveUser(user);
+    }
+
+    @Override
+    public Mono<User> updateUser(Long id, UserDTO<String> userDTO) {
+        userValidation.validateUser(userDTO);
+        return findUserById(id)
+                .flatMap(user -> {
+                    populateUserFields(user, userDTO);
+                    return saveUser(user);
                 });
     }
 
     @Override
     public Mono<Void> deleteUser(Long id) {
-        return Mono.justOrEmpty(userRepository.findById(id))
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("User not found with id: " + id)))
-                .flatMap(user -> {
-                    userRepository.delete(user);
-                    return Mono.empty();  // Return an empty Mono<Void>
-                });
+        return findUserById(id)
+                .flatMap(user -> userRepository.delete(user) // Delete method should return Mono<Void>
+                        .subscribeOn(Schedulers.boundedElastic())
+                        .then());
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public Flux<User> getAllUsers() {
+        return userRepository.findAll() // Directly return the Flux<User> from the repository
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public Mono<User> findUserById(Long id) {
-        return Mono.just(userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id)));
+        return userRepository.findById(id) // This returns Mono<User>
+                .subscribeOn(Schedulers.boundedElastic())
+                .switchIfEmpty(Mono.error(new RuntimeException("User not found")));
+    }
+
+    private Mono<User> saveUser(User user) {
+        return userRepository.save(user) // Assuming save returns Mono<User>
+                .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    // Reusable method to populate user fields
+    private User populateUserFields(User user, UserDTO<String> userDTO) {
+        user.setName(userDTO.getName());
+        user.setAge(userDTO.getAge());
+        user.setGender(userDTO.getGender());
+        user.setNationalIdNumber(userDTO.getNationalIdNumber());
+        user.setDateOfEmployment(userDTO.getDateOfEmployment());
+        user.setRoles(userDTO.getRoles());
+        return user;
     }
 }

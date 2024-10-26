@@ -1,43 +1,39 @@
+// AuthController.java
 package com.Api.EMS.controller;
 
 import com.Api.EMS.dto.AuthRequest;
 import com.Api.EMS.dto.AuthResponse;
-import com.Api.EMS.security.JwtTokenProvider;
-import com.Api.EMS.security.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.AuthService;
+import com.Api.EMS.utils.ResponseUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private final AuthService authService;
+    private final ResponseUtil responseUtil;
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest request) {
-        // Perform authentication
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
+        return authService.login(authRequest)
+                .map(responseUtil::createSuccessResponse)
+                .defaultIfEmpty(responseUtil.createErrorResponse(new AuthResponse("Authentication failed"), HttpStatus.UNAUTHORIZED));
+    }
 
-        // Fetch user details reactively
-        return customUserDetailsService.findByUsername(request.getUsername())
-                .map(userDetails -> {
-                    // Generate token once user details are available
-                    String token = jwtTokenProvider.generateToken(userDetails.getUsername(), userDetails.getAuthorities());
-                    return ResponseEntity.ok(new AuthResponse(token));
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
+        return authService.signup(authRequest)
+                .map(responseUtil::createSuccessResponse)
+                .onErrorResume(e -> {
+                    AuthResponse errorResponse = new AuthResponse("Registration failed");
+                    return Mono.just(responseUtil.createErrorResponse(errorResponse, HttpStatus.BAD_REQUEST));
                 });
     }
+
 }

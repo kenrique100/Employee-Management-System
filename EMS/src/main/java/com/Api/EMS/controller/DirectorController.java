@@ -2,43 +2,51 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.DirectorService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.Api.EMS.service.DirectorService;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/director")
+@RequiredArgsConstructor
 public class DirectorController {
 
-    @Autowired
-    private DirectorService directorService;
+    private final DirectorService directorService;
+
+    private <T> Mono<ResponseEntity<T>> handleMonoResponse(Mono<T> monoResponse) {
+        return monoResponse
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/user")
-    public ResponseEntity<User> createUser(@RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(directorService.createUser(userDTO).block());
+    public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
+        return handleMonoResponse(directorService.createUser(userDTO));
     }
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(directorService.updateUser(id, userDTO).block());
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+        return handleMonoResponse(directorService.updateUser(id, userDTO));
     }
 
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        directorService.deleteUser(id).block();
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
+        return directorService.deleteUser(id)
+                .thenReturn(ResponseEntity.ok().<Void>build())
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(directorService.getAllUsers());
+    public Flux<ResponseEntity<User>> getAllUsers() {
+        return directorService.getAllUsers()
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> findUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(directorService.findUserById(id).block());
+    public Mono<ResponseEntity<User>> findUserById(@PathVariable Long id) {
+        return handleMonoResponse(directorService.findUserById(id));
     }
 }

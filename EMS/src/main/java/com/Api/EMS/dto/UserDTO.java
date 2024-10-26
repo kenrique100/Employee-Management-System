@@ -1,11 +1,16 @@
 package com.Api.EMS.dto;
 
+import lombok.Builder;
 import lombok.Data;
-
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.util.List;
 
 @Data
-public class UserDTO {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDTO<T> {
     private String name;
     private int age;
     private String gender;
@@ -14,5 +19,5 @@ public class UserDTO {
     private String dateOfEmployment;
     private String username;
     private String password;
-    private List<String> roles;
+    private List<T> roles;
 }

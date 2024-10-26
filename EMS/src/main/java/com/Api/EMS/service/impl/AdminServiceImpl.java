@@ -5,58 +5,63 @@ import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.service.AdminService;
 import com.Api.EMS.utils.GUIDGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.validation.UserValidation;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Service
 public class AdminServiceImpl implements AdminService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserValidation userValidation;
 
-    @Override
-    public Mono<User> createUser(UserDTO userDTO) {
-        User user = new User();
-        user.setGuid(GUIDGenerator.generateGUID(8));
-        user.setName(userDTO.getName());
-        user.setAge(userDTO.getAge());
-        user.setGender(userDTO.getGender());
-        user.setNationalIdNumber(userDTO.getNationalIdNumber());
-        user.setDateOfEmployment(userDTO.getDateOfEmployment());
-        user.setRoles(userDTO.getRoles());  // No need to wrap in List.of()
-        return Mono.just(userRepository.save(user));
+    public AdminServiceImpl(UserRepository userRepository, UserValidation userValidation) {
+        this.userRepository = userRepository;
+        this.userValidation = userValidation;
     }
 
     @Override
-    public Mono<User> updateUser(Long id, UserDTO userDTO) {
-        return Mono.justOrEmpty(userRepository.findById(id)).flatMap(user -> {
-            user.setName(userDTO.getName());
-            user.setAge(userDTO.getAge());
-            user.setGender(userDTO.getGender());
-            user.setNationalIdNumber(userDTO.getNationalIdNumber());
-            user.setDateOfEmployment(userDTO.getDateOfEmployment());
-            user.setRoles(userDTO.getRoles());  // No need to wrap in List.of()
-            return Mono.just(userRepository.save(user));
-        });
+    public Mono<User> createUser(UserDTO<String> userDTO) {
+        userValidation.validateUser(userDTO);
+        User user = populateUserFields(new User(), userDTO);
+        user.setGuid(GUIDGenerator.generateGUID(8));
+        return userRepository.save(user);
+    }
+
+    @Override
+    public Mono<User> updateUser(Long id, UserDTO<String> userDTO) {
+        userValidation.validateUser(userDTO);
+        return userRepository.findById(id)
+                .flatMap(user -> {
+                    populateUserFields(user, userDTO);
+                    return userRepository.save(user);
+                });
     }
 
     @Override
     public Mono<Void> deleteUser(Long id) {
-        return Mono.justOrEmpty(userRepository.findById(id)).flatMap(user -> {
-            userRepository.delete(user);
-            return Mono.empty();
-        });
+        return userRepository.findById(id)
+                .flatMap(user -> userRepository.delete(user).then());
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public Flux<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     @Override
     public Mono<User> findUserById(Long id) {
-        return Mono.justOrEmpty(userRepository.findById(id));
+        return userRepository.findById(id);
+    }
+
+    private User populateUserFields(User user, UserDTO<String> userDTO) {
+        user.setName(userDTO.getName());
+        user.setAge(userDTO.getAge());
+        user.setGender(userDTO.getGender());
+        user.setNationalIdNumber(userDTO.getNationalIdNumber());
+        user.setDateOfEmployment(userDTO.getDateOfEmployment());
+        user.setRoles(userDTO.getRoles());
+        return user;
     }
 }

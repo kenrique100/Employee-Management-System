@@ -1,45 +1,52 @@
 package com.Api.EMS.controller;
 
-
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
-import com.Api.EMS.service.ManagerService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.ManagerService; // Use ManagerService instead of DirectorService
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/manager")
+@RequiredArgsConstructor
 public class ManagerController {
 
-    @Autowired
-    private ManagerService managerService;
+    private final ManagerService managerService;
+
+    private <T> Mono<ResponseEntity<T>> handleMonoResponse(Mono<T> monoResponse) {
+        return monoResponse
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
 
     @PostMapping("/user")
-    public ResponseEntity<User> createUser(@RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(managerService.createUser(userDTO).block());
+    public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
+        return handleMonoResponse(managerService.createUser(userDTO)); // Use managerService
     }
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(managerService.updateUser(id, userDTO).block());
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+        return handleMonoResponse(managerService.updateUser(id, userDTO)); // Use managerService
     }
 
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        managerService.deleteUser(id).block();
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
+        return managerService.deleteUser(id)
+                .thenReturn(ResponseEntity.ok().<Void>build())
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(managerService.getAllUsers());
+    public Flux<ResponseEntity<User>> getAllUsers() {
+        return managerService.getAllUsers()
+                .map(ResponseEntity::ok);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> findUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(managerService.findUserById(id).block());
+    public Mono<ResponseEntity<User>> findUserById(@PathVariable Long id) {
+        return handleMonoResponse(managerService.findUserById(id)); // Use managerService
     }
 }

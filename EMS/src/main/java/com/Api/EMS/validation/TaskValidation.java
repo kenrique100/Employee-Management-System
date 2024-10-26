@@ -13,35 +13,29 @@ public class TaskValidation {
     public void validateTask(Task task) {
         validateTitle(task.getTitle());
         validateDescription(task.getDescription());
-
-        // Convert java.util.Date to java.time.LocalDate
-        LocalDate dueDate = convertToLocalDate(task.getDueDate());
-        validateDueDate(dueDate);
+        validateDueDate(convertToLocalDate(task.getDueDate()));
     }
 
     private void validateTitle(String title) {
-        if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Task title cannot be empty.");
-        }
+        boolean isInvalidTitle = (title == null || title.trim().isEmpty());
+        throwExceptionIfTrue(isInvalidTitle, "Task title cannot be empty.");
     }
 
     private void validateDescription(String description) {
-        if (description == null || description.trim().isEmpty()) {
-            throw new IllegalArgumentException("Task description cannot be empty.");
-        }
+        boolean isInvalidDescription = (description == null || description.trim().isEmpty());
+        throwExceptionIfTrue(isInvalidDescription, "Task description cannot be empty.");
     }
 
     private void validateDueDate(LocalDate dueDate) {
-        if (dueDate == null || dueDate.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Due date cannot be in the past.");
-        }
+        boolean isInvalidDueDate = (dueDate == null || dueDate.isBefore(LocalDate.now()));
+        throwExceptionIfTrue(isInvalidDueDate, "Due date cannot be in the past.");
     }
 
-    // Utility method to convert java.util.Date to java.time.LocalDate
     private LocalDate convertToLocalDate(Date date) {
-        if (date == null) {
-            return null;
-        }
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        return date == null ? null : date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    private void throwExceptionIfTrue(boolean condition, String message) {
+        if (condition) throw new IllegalArgumentException(message);
     }
 }

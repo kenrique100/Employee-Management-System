@@ -2,40 +2,51 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.model.Task;
 import com.Api.EMS.repository.TaskRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/task")
 public class TaskController {
 
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
+
+    public TaskController(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
 
     @PostMapping("/create")
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
-        return ResponseEntity.ok(taskRepository.save(task));
+    public Mono<ResponseEntity<Task>> createTask(@RequestBody Task task) {
+        return taskRepository.save(task)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.badRequest().build());
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task task) {
-        Task existingTask = taskRepository.findById(id).orElseThrow();
-        existingTask.setDueDate(task.getDueDate());
-        existingTask.setDescription(task.getDescription());
-        return ResponseEntity.ok(taskRepository.save(existingTask));
+    public Mono<ResponseEntity<Task>> updateTask(@PathVariable Long id, @RequestBody Task task) {
+        return taskRepository.findById(id)
+                .flatMap(existingTask -> {
+                    existingTask.setDueDate(task.getDueDate());
+                    existingTask.setDescription(task.getDescription());
+                    return taskRepository.save(existingTask);
+                })
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
-        taskRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable Long id) {
+        return taskRepository.findById(id)
+                .flatMap(existingTask ->
+                        taskRepository.delete(existingTask).then(Mono.just(ResponseEntity.ok().<Void>build()))
+                )
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Task>> getAllTasks() {
-        return ResponseEntity.ok(taskRepository.findAll());
+    public Flux<Task> getAllTasks() {
+        return taskRepository.findAll();
     }
 }

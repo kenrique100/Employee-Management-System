@@ -1,16 +1,17 @@
 package com.Api.EMS.model;
 
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.persistence.*;
 import java.util.Collection;
 import java.util.List;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class User implements UserDetails {
 
@@ -33,53 +34,13 @@ public class User implements UserDetails {
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles;
 
-    // Specialty field
     private String specialty;
-
-    // No-arg constructor
-    public User() {}
-
-    // All-args constructor for fields
-    public User(Long id, String username, String password, String guid, String name, int age,
-                String gender, String nationalIdNumber, String dateOfEmployment,
-                List<String> roles, String specialty) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.guid = guid;
-        this.name = name;
-        this.age = age;
-        this.gender = gender;
-        this.nationalIdNumber = nationalIdNumber;
-        this.dateOfEmployment = dateOfEmployment;
-        this.roles = roles;
-        this.specialty = specialty;
-    }
-
-    // Builder class with specialty setter
-    public static class UserBuilder {
-        private String specialty;
-
-        public UserBuilder specialty(String specialty) {
-            this.specialty = specialty;
-            return this;
-        }
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(role -> (GrantedAuthority) () -> "ROLE_" + role).toList();
-    }
-
-    // UserDetails methods
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
+        return roles.stream()
+                .map(role -> (GrantedAuthority) () -> "ROLE_" + role)
+                .toList();
     }
 
     @Override

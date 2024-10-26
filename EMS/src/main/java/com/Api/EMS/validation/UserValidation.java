@@ -9,10 +9,9 @@ import java.util.regex.Pattern;
 @Component
 public class UserValidation {
 
-    // Regex pattern for valid names (only letters and spaces)
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z\\s]+$");
 
-    public void validateUser(UserDTO userDTO) {
+    public void validateUser(UserDTO<String> userDTO) {
         validateName(userDTO.getName());
         validateAge(userDTO.getAge());
         validateGender(userDTO.getGender());
@@ -21,37 +20,38 @@ public class UserValidation {
     }
 
     private void validateName(String name) {
-        if (name == null || name.trim().isEmpty() || !NAME_PATTERN.matcher(name).matches()) {
-            throw new IllegalArgumentException("Invalid name: " + name);
-        }
+        boolean isInvalidName = (name == null || name.trim().isEmpty() || !NAME_PATTERN.matcher(name).matches());
+        throwExceptionIfTrue(isInvalidName, "Invalid name: " + name);
     }
 
     private void validateAge(int age) {
-        if (age < 18 || age > 65) { // Example age limits
-            throw new IllegalArgumentException("Age must be between 18 and 65.");
-        }
+        boolean isInvalidAge = (age < 18 || age > 65); // Example age limits
+        throwExceptionIfTrue(isInvalidAge, "Age must be between 18 and 65.");
     }
 
     private void validateGender(String gender) {
-        if (!"Male".equalsIgnoreCase(gender) && !"Female".equalsIgnoreCase(gender) && !"Other".equalsIgnoreCase(gender)) {
-            throw new IllegalArgumentException("Invalid gender: " + gender);
-        }
+        boolean isInvalidGender = (!"Male".equalsIgnoreCase(gender) &&
+                !"Female".equalsIgnoreCase(gender) &&
+                !"Other".equalsIgnoreCase(gender));
+        throwExceptionIfTrue(isInvalidGender, "Invalid gender: " + gender);
     }
 
     private void validateSpecialty(String specialty) {
-        if (specialty == null || specialty.trim().isEmpty()) {
-            throw new IllegalArgumentException("Specialty cannot be empty.");
-        }
+        boolean isInvalidSpecialty = (specialty == null || specialty.trim().isEmpty());
+        throwExceptionIfTrue(isInvalidSpecialty, "Specialty cannot be empty.");
     }
 
     private void validateRoles(List<String> roles) {
-        if (roles == null || roles.isEmpty()) {
-            throw new IllegalArgumentException("Roles cannot be empty.");
-        }
-        for (String role : roles) {
-            if (role == null || role.trim().isEmpty()) {
-                throw new IllegalArgumentException("Role cannot be empty.");
-            }
-        }
+        boolean isInvalidRoles = (roles == null || roles.isEmpty());
+        throwExceptionIfTrue(isInvalidRoles, "Roles cannot be empty.");
+
+        roles.forEach(role -> {
+            boolean isInvalidRole = (role == null || role.trim().isEmpty());
+            throwExceptionIfTrue(isInvalidRole, "Role cannot be empty.");
+        });
+    }
+
+    private void throwExceptionIfTrue(boolean condition, String message) {
+        if (condition) throw new IllegalArgumentException(message);
     }
 }
