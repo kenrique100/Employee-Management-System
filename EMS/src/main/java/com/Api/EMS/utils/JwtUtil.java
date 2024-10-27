@@ -60,7 +60,6 @@ public class JwtUtil {
         }
     }
 
-    // Retrieves claims from the token
     private Jws<Claims> getClaimsFromToken(String token) {
         JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
         return parser.parseClaimsJws(token);

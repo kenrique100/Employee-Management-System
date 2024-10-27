@@ -23,17 +23,15 @@ public class AuthController {
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
         return authService.login(authRequest)
                 .map(responseUtil::createSuccessResponse)
-                .defaultIfEmpty(responseUtil.createErrorResponse(new AuthResponse("Authentication failed"), HttpStatus.UNAUTHORIZED));
+                .defaultIfEmpty(responseUtil.createErrorResponse(
+                        new AuthResponse("Authentication failed"), HttpStatus.UNAUTHORIZED));
     }
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
         return authService.signup(authRequest)
                 .map(responseUtil::createSuccessResponse)
-                .onErrorResume(e -> {
-                    AuthResponse errorResponse = new AuthResponse("Registration failed");
-                    return Mono.just(responseUtil.createErrorResponse(errorResponse, HttpStatus.BAD_REQUEST));
-                });
+                .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
+                        new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
     }
-
 }

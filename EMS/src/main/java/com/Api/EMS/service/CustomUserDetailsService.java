@@ -1,4 +1,4 @@
-package com.Api.EMS.security;
+package com.Api.EMS.service;
 
 import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;

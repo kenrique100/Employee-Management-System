@@ -27,10 +27,8 @@ public class AdminController {
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
         return authService.signup(authRequest)
                 .map(responseUtil::createSuccessResponse)
-                .onErrorResume(e -> {
-                    AuthResponse errorResponse = new AuthResponse("Registration failed");
-                    return Mono.just(responseUtil.createErrorResponse(errorResponse, HttpStatus.BAD_REQUEST));
-                });
+                .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
+                        new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
     }
 
     @PostMapping("/user")

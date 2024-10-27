@@ -12,4 +12,3 @@ public interface AdminService {
     Flux<User> getAllUsers();
     Mono<User> findUserById(Long id);
 }
-

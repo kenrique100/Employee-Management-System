@@ -1,36 +1,29 @@
 package com.Api.EMS.security;
 
-import com.Api.EMS.model.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import lombok.Getter;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
+import com.Api.EMS.model.User;
+import java.security.Key;
 import java.util.Date;
-
 @Component
-@Getter // Use @Getter if you need to access SECRET_KEY from outside, otherwise you can skip it
 public class JwtTokenProvider {
 
     @Value("${jwt.secret}")
-    private String SECRET_KEY;  // This will be injected from application.properties
+    private String SECRET_KEY;
 
-    private final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
+    private final long EXPIRATION_TIME = 86400000;
 
     public String generateToken(User user) {
+        Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .claim("roles", user.getRoles())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
-    }
-
-    public Claims extractClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
     }
 
     public boolean isTokenValid(String token) {
@@ -39,5 +32,13 @@ public class JwtTokenProvider {
 
     public String getUsernameFromToken(String token) {
         return extractClaims(token).getSubject();
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY.getBytes())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

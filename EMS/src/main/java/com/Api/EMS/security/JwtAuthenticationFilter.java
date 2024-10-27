@@ -1,6 +1,6 @@
 package com.Api.EMS.security;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.CustomUserDetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -12,22 +12,22 @@ import reactor.core.publisher.Mono;
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.customUserDetailsService = customUserDetailsService;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String token = extractToken(exchange);
         if (token != null && jwtTokenProvider.isTokenValid(token)) {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
-            return customUserDetailsService.findByUsername(username)
+            return customUserDetailsService.findByUsername(jwtTokenProvider.getUsernameFromToken(token))
                     .flatMap(userDetails -> {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
+                                userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                         return chain.filter(exchange);
                     });
