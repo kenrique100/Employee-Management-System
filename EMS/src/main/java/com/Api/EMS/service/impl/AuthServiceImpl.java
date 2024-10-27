@@ -23,20 +23,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Mono<AuthResponse> signup(AuthRequest authRequest) {
+        if (authRequest.getRoles() == null || !authRequest.getRoles().contains("ADMIN")) {
+            return Mono.error(new IllegalArgumentException("Only admins are allowed to sign up"));
+        }
+
         return userRepository.existsByUsername(authRequest.getUsername())
                 .flatMap(exists -> {
-                    if (exists) return Mono.error(new IllegalArgumentException("Username is taken"));
+                    if (exists) {
+                        return Mono.error(new IllegalArgumentException("Username is taken"));
+                    }
 
                     User user = User.builder()
                             .username(authRequest.getUsername())
                             .password(passwordEncoder.encode(authRequest.getPassword()))
-                            .roles(List.of("ADMIN")) // Set roles as needed
+                            .roles(List.of("ADMIN")) // Ensure role is set as "ADMIN"
                             .build();
 
                     return userRepository.save(user)
                             .map(savedUser -> new AuthResponse(jwtTokenProvider.generateToken(savedUser)));
                 });
     }
+
 
     @Override
     public Mono<AuthResponse> login(AuthRequest authRequest) {

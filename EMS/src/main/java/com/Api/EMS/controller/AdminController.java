@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -25,13 +27,19 @@ public class AdminController {
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
+        List<String> roles = authRequest.getRoles();
+        if (roles == null || !roles.contains("ADMIN")) {
+            return Mono.just(responseUtil.createErrorResponse(
+                    new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
+        }
+
         return authService.signup(authRequest)
                 .map(responseUtil::createSuccessResponse)
                 .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
                         new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
     }
 
-    @PostMapping("/user")
+@PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
         return adminService.createUser(userDTO)
                 .map(ResponseEntity::ok)

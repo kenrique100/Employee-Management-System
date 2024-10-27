@@ -16,7 +16,7 @@ public class UserDetailsServiceImpl implements ReactiveUserDetailsService {
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return userRepository.findByUsername(username) // This should return Mono<User>
+        return userRepository.findByUsername(username)
                 .map(user -> org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
                         .password(user.getPassword())
                         .roles(user.getRoles().toArray(new String[0]))

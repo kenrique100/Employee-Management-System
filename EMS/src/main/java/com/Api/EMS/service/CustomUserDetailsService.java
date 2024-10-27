@@ -1,13 +1,14 @@
 package com.Api.EMS.service;
 
-import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Service
+@Primary
 public class CustomUserDetailsService implements ReactiveUserDetailsService {
 
     private final UserRepository userRepository;

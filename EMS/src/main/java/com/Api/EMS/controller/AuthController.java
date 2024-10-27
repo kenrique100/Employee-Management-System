@@ -1,4 +1,3 @@
-// AuthController.java
 package com.Api.EMS.controller;
 
 import com.Api.EMS.dto.AuthRequest;
@@ -10,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,6 +30,12 @@ public class AuthController {
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
+        List<String> roles = authRequest.getRoles();
+        if (roles == null || !roles.contains("ADMIN")) {
+            return Mono.just(responseUtil.createErrorResponse(
+                    new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
+        }
+
         return authService.signup(authRequest)
                 .map(responseUtil::createSuccessResponse)
                 .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(

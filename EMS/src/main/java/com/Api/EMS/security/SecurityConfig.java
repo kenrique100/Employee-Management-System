@@ -1,5 +1,7 @@
 package com.Api.EMS.security;
 
+import com.Api.EMS.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -17,18 +19,24 @@ import java.util.List;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private final CustomUserDetailsService customUserDetailsService;
+
+    public SecurityConfig(@Qualifier("customUserDetailsService") CustomUserDetailsService customUserDetailsService) {
+        this.customUserDetailsService = customUserDetailsService;
+    }
+
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)  // Disable CSRF for WebFlux
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/admin/signup", "/login").permitAll()  // Open endpoints for registration and login
-                        .anyExchange().authenticated()  // Require authentication for all other endpoints
+                        .pathMatchers("/admin/signup", "/login").permitAll()
+                        .anyExchange().authenticated()
                 )
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)  // Enable HTTP Basic Authentication
-                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login"));  // Set up form login
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login"));
 
-        return http.authenticationManager(authenticationManager()).build();  // Set authentication manager here
+        return http.authenticationManager(authenticationManager()).build();
     }
 
     @Bean
@@ -37,6 +45,8 @@ public class SecurityConfig {
     }
 
     private ReactiveAuthenticationManager authenticationManager() {
-        return authentication -> Mono.just(new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), authentication.getCredentials(), List.of()));
+        return authentication -> customUserDetailsService.findByUsername(authentication.getName())
+                .map(userDetails -> new UsernamePasswordAuthenticationToken(
+                        userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities()));
     }
 }
