@@ -30,11 +30,11 @@ public class WebSecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/auth/signup", "/api/auth/login").permitAll()
-                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
-                        .pathMatchers("/api/director/**").hasAnyRole("ADMIN", "DIRECTOR")
-                        .pathMatchers("/api/manager/**").hasAnyRole("ADMIN", "DIRECTOR", "MANAGER")
-                        .pathMatchers("/api/employee/**").hasAnyRole("ADMIN", "DIRECTOR", "MANAGER", "EMPLOYEE")
+                        .pathMatchers("/signup", "/login").permitAll()
+                        .pathMatchers("/admin/**").hasRole("ADMIN")
+                        .pathMatchers("/director/**").hasAnyRole("ADMIN", "DIRECTOR")
+                        .pathMatchers("/manager/**").hasAnyRole("ADMIN", "DIRECTOR", "MANAGER")
+                        .pathMatchers("/employee/**").hasAnyRole("ADMIN", "DIRECTOR", "MANAGER", "EMPLOYEE")
                         .anyExchange().authenticated()
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHORIZATION)

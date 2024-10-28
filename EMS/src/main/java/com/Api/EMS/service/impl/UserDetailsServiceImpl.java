@@ -17,10 +17,12 @@ public class UserDetailsServiceImpl implements ReactiveUserDetailsService {
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .map(user -> org.springframework.security.core.userdetails.User.withUsername(user.getUsername())
+                .map(user -> org.springframework.security.core.userdetails.User
+                        .withUsername(user.getUsername())
                         .password(user.getPassword())
                         .roles(user.getRoles().toArray(new String[0]))
-                        .build())
+                        .build()
+                )
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")));
     }
 }

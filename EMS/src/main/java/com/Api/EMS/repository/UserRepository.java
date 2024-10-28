@@ -5,11 +5,12 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface UserRepository extends ReactiveCrudRepository<User, Long> {
+
+    Mono<User> findByUsername(String username);
+
     default Mono<Boolean> existsByUsername(String username) {
         return findByUsername(username)
                 .map(user -> true)
                 .defaultIfEmpty(false);
     }
-
-    Mono<User> findByUsername(String username);
 }

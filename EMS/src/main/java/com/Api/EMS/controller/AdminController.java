@@ -6,6 +6,7 @@ import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
 import com.Api.EMS.service.AdminService;
 import com.Api.EMS.service.AuthService;
+import com.Api.EMS.utils.AuthValidationUtil;
 import com.Api.EMS.utils.ResponseUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
@@ -25,32 +24,32 @@ public class AdminController {
     private final AuthService authService;
     private final ResponseUtil responseUtil;
 
+    // Only admin signup
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
-        List<String> roles = authRequest.getRoles();
-        if (roles == null || !roles.contains("ADMIN")) {
-            return Mono.just(responseUtil.createErrorResponse(
-                    new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
-        }
-
-        return authService.signup(authRequest)
-                .map(responseUtil::createSuccessResponse)
-                .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
-                        new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
+        // Validate if the user has an admin role before signing up
+        return AuthValidationUtil.validateAdminRole(authRequest, responseUtil)
+                .switchIfEmpty(authService.signup(authRequest)
+                        .map(responseUtil::createSuccessResponse)
+                        .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
+                                new AuthResponse("Admin registration failed"), HttpStatus.BAD_REQUEST))));
     }
 
-@PostMapping("/user")
+    // Create a new user (admin only)
+    @PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
         return adminService.createUser(userDTO)
                 .map(ResponseEntity::ok)
                 .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
     }
 
+    // Get all users (admin only)
     @GetMapping("/users")
     public Flux<User> getAllUsers() {
         return adminService.getAllUsers();
     }
 
+    // Get a user by their ID
     @GetMapping("/user/{id}")
     public Mono<ResponseEntity<User>> getUserById(@PathVariable Long id) {
         return adminService.findUserById(id)
@@ -58,6 +57,7 @@ public class AdminController {
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
+    // Update a user
     @PutMapping("/user/{id}")
     public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
         return adminService.updateUser(id, userDTO)
@@ -66,6 +66,7 @@ public class AdminController {
                 .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
     }
 
+    // Delete a user by their ID
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
         return adminService.deleteUser(id)
