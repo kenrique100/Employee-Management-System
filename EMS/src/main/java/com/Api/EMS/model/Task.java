@@ -1,20 +1,20 @@
 package com.Api.EMS.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.util.Date;
 
-@Entity
+@Document(collection = "tasks")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;  // MongoDB IDs are typically strings
 
     private String title;
     private String description;
