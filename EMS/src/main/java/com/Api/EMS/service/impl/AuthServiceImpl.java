@@ -9,7 +9,6 @@ import com.Api.EMS.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -22,38 +21,14 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public Mono<AuthResponse> signup(AuthRequest authRequest) {
-        if (authRequest.getRoles() == null || !authRequest.getRoles().contains("ADMIN")) {
-            return Mono.error(new IllegalArgumentException("Only admins are allowed to sign up"));
+    public AuthResponse login(AuthRequest authRequest) {
+        User user = userRepository.findByUsername(authRequest.getUsername())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+
+        if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
+            return new AuthResponse(jwtTokenProvider.generateToken(user));
+        } else {
+            throw new RuntimeException("Invalid credentials");
         }
-
-        return userRepository.existsByUsername(authRequest.getUsername())
-                .flatMap(exists -> {
-                    if (exists) {
-                        return Mono.error(new IllegalArgumentException("Username is taken"));
-                    }
-
-                    User user = User.builder()
-                            .username(authRequest.getUsername())
-                            .password(passwordEncoder.encode(authRequest.getPassword()))
-                            .roles(List.of("ADMIN")) // Ensure role is set as "ADMIN"
-                            .build();
-
-                    return userRepository.save(user)
-                            .map(savedUser -> new AuthResponse(jwtTokenProvider.generateToken(savedUser)));
-                });
-    }
-
-
-    @Override
-    public Mono<AuthResponse> login(AuthRequest authRequest) {
-        return userRepository.findByUsername(authRequest.getUsername())
-                .flatMap(user -> {
-                    if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
-                        return Mono.just(new AuthResponse(jwtTokenProvider.generateToken(user)));
-                    }
-                    return Mono.error(new RuntimeException("Invalid credentials"));
-                })
-                .switchIfEmpty(Mono.error(new RuntimeException("Invalid credentials")));
     }
 }

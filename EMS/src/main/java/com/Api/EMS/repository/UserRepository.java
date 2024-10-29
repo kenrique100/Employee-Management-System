@@ -1,16 +1,17 @@
 package com.Api.EMS.repository;
 
 import com.Api.EMS.model.User;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
-import reactor.core.publisher.Mono;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface UserRepository extends ReactiveCrudRepository<User, Long> {
+import java.util.Optional;
 
-    Mono<User> findByUsername(String username);
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    default Mono<Boolean> existsByUsername(String username) {
-        return findByUsername(username)
-                .map(user -> true)
-                .defaultIfEmpty(false);
+    Optional<User> findByUsername(String username);
+
+    default boolean existsByUsername(String username) {
+        return findByUsername(username).isPresent();
     }
 }

@@ -1,12 +1,12 @@
 package com.Api.EMS.dto;
 
 import lombok.Data;
-
 import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 @Data
 public class AuthRequest {
+    @NotEmpty(message = "Company Name is required")
     private String companyName;
 
     @NotEmpty(message = "Username is required")

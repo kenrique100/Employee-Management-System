@@ -1,42 +1,51 @@
 package com.Api.EMS.security;
 
 import com.Api.EMS.service.impl.UserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter implements WebFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserDetailsServiceImpl userDetailsServiceImpl;
 
+    @Autowired
     public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsServiceImpl) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.userDetailsServiceImpl = userDetailsServiceImpl;
     }
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String token = extractToken(exchange);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String token = extractToken(request);
+
         if (token != null && jwtTokenProvider.isTokenValid(token)) {
-            return userDetailsServiceImpl.findByUsername(jwtTokenProvider.getUsernameFromToken(token))
-                    .flatMap(userDetails -> {
-                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        return chain.filter(exchange);
-                    });
+            String username = jwtTokenProvider.getUsernameFromToken(token);
+            UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
+
+            if (userDetails != null) {
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
-        return chain.filter(exchange);
+
+        filterChain.doFilter(request, response);
     }
 
-    private String extractToken(ServerWebExchange exchange) {
-        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
+    private String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
         return (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
     }
 }

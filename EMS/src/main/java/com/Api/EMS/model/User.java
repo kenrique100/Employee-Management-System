@@ -19,21 +19,24 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
-    private String guid;
-    private String name;
-    private int age;
-    private String gender;
-    private String nationalIdNumber;
-    private String dateOfEmployment;
+    @Column(nullable = false)
+    private String companyName;
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles;
 
+    private String guid;
+    private String name;
+    private Integer age;
+    private String gender;
+    private String nationalIdNumber;
+    private String dateOfEmployment;
     private String specialty;
 
     @Override

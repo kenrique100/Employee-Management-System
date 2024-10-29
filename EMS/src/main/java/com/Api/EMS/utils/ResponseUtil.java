@@ -1,6 +1,5 @@
 package com.Api.EMS.utils;
 
-import com.Api.EMS.dto.AuthResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -9,10 +8,10 @@ import org.springframework.stereotype.Component;
 public class ResponseUtil {
 
     public <T> ResponseEntity<T> createSuccessResponse(T body) {
-        return new ResponseEntity<>(body, HttpStatus.OK);
+        return ResponseEntity.ok(body);
     }
 
-    public ResponseEntity<AuthResponse> createErrorResponse(AuthResponse authResponse, HttpStatus status) {
-        return new ResponseEntity<>(authResponse, status);
+    public <T> ResponseEntity<T> createErrorResponse(T body, HttpStatus status) {
+        return ResponseEntity.status(status).body(body);
     }
 }
