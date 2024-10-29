@@ -25,7 +25,7 @@ public class TaskController {
     }
 
     @PutMapping("/update/{id}")
-    public Mono<ResponseEntity<Task>> updateTask(@PathVariable Long id, @RequestBody Task task) {
+    public Mono<ResponseEntity<Task>> updateTask(@PathVariable String id, @RequestBody Task task) {
         return taskRepository.findById(id)
                 .flatMap(existingTask -> {
                     existingTask.setDueDate(task.getDueDate());
@@ -37,7 +37,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable Long id) {
+    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable String id) {
         return taskRepository.findById(id)
                 .flatMap(existingTask ->
                         taskRepository.delete(existingTask).then(Mono.just(ResponseEntity.ok().<Void>build()))
