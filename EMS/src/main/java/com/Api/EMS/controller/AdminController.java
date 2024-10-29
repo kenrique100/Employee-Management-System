@@ -28,6 +28,8 @@ public class AdminController {
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
         List<String> roles = authRequest.getRoles();
+
+        // Ensure only admins can register
         if (roles == null || !roles.contains("ADMIN")) {
             return Mono.just(responseUtil.createErrorResponse(
                     new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
@@ -39,7 +41,7 @@ public class AdminController {
                         new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
     }
 
-@PostMapping("/user")
+    @PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
         return adminService.createUser(userDTO)
                 .map(ResponseEntity::ok)
@@ -52,14 +54,14 @@ public class AdminController {
     }
 
     @GetMapping("/user/{id}")
-    public Mono<ResponseEntity<User>> getUserById(@PathVariable Long id) {
+    public Mono<ResponseEntity<User>> getUserById(@PathVariable String id) {
         return adminService.findUserById(id)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/user/{id}")
-    public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
         return adminService.updateUser(id, userDTO)
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build())
@@ -67,7 +69,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/user/{id}")
-    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
         return adminService.deleteUser(id)
                 .then(Mono.just(ResponseEntity.ok().<Void>build()))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
