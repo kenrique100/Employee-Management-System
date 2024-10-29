@@ -4,5 +4,5 @@ import com.Api.EMS.model.User;
 import reactor.core.publisher.Mono;
 
 public interface EmployeeService {
-    Mono<User> getUserById(Long id);
+    Mono<User> getUserById(String id);
 }

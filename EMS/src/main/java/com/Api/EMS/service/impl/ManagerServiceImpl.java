@@ -9,7 +9,6 @@ import com.Api.EMS.validation.UserValidation;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 public class ManagerServiceImpl implements ManagerService {
@@ -27,46 +26,36 @@ public class ManagerServiceImpl implements ManagerService {
         userValidation.validateUser(userDTO);
         User user = populateUserFields(new User(), userDTO);
         user.setGuid(GUIDGenerator.generateGUID(8));
-        return saveUser(user);
+        return userRepository.save(user);
     }
 
     @Override
-    public Mono<User> updateUser(Long id, UserDTO<String> userDTO) {
+    public Mono<User> updateUser(String id, UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
-        return findUserById(id)
+        return userRepository.findById(id)
                 .flatMap(user -> {
                     populateUserFields(user, userDTO);
-                    return saveUser(user);
+                    return userRepository.save(user);
                 });
     }
 
     @Override
-    public Mono<Void> deleteUser(Long id) {
-        return findUserById(id)
-                .flatMap(user -> userRepository.delete(user) // Delete method should return Mono<Void>
-                        .subscribeOn(Schedulers.boundedElastic())
-                        .then());
+    public Mono<Void> deleteUser(String id) {
+        return userRepository.findById(id)
+                .flatMap(userRepository::delete);
     }
 
     @Override
     public Flux<User> getAllUsers() {
-        return userRepository.findAll() // Directly return the Flux<User> from the repository
-                .subscribeOn(Schedulers.boundedElastic());
+        return userRepository.findAll();
     }
 
     @Override
-    public Mono<User> findUserById(Long id) {
-        return userRepository.findById(id) // This returns Mono<User>
-                .subscribeOn(Schedulers.boundedElastic())
+    public Mono<User> findUserById(String id) {
+        return userRepository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("User not found")));
     }
 
-    private Mono<User> saveUser(User user) {
-        return userRepository.save(user) // Assuming save returns Mono<User>
-                .subscribeOn(Schedulers.boundedElastic());
-    }
-
-    // Reusable method to populate user fields
     private User populateUserFields(User user, UserDTO<String> userDTO) {
         user.setName(userDTO.getName());
         user.setAge(userDTO.getAge());

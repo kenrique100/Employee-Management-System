@@ -30,7 +30,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Mono<User> updateUser(Long id, UserDTO<String> userDTO) {
+    public Mono<User> updateUser(String id, UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
         return userRepository.findById(id)
                 .flatMap(user -> {
@@ -40,9 +40,9 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Mono<Void> deleteUser(Long id) {
+    public Mono<Void> deleteUser(String id) {
         return userRepository.findById(id)
-                .flatMap(user -> userRepository.delete(user).then());
+                .flatMap(userRepository::delete);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public Mono<User> findUserById(Long id) {
+    public Mono<User> findUserById(String id) {
         return userRepository.findById(id);
     }
 

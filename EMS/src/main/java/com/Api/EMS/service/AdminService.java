@@ -7,8 +7,8 @@ import reactor.core.publisher.Mono;
 
 public interface AdminService {
     Mono<User> createUser(UserDTO<String> userDTO);
-    Mono<User> updateUser(Long id, UserDTO<String> userDTO);
-    Mono<Void> deleteUser(Long id);
+    Mono<User> updateUser(String id, UserDTO<String> userDTO);
+    Mono<Void> deleteUser(String id);
     Flux<User> getAllUsers();
-    Mono<User> findUserById(Long id);
+    Mono<User> findUserById(String id);
 }
