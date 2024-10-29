@@ -28,20 +28,20 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF (consider security implications)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/admin/signup", "/login").permitAll()
-                        .anyExchange().authenticated()
+                        .pathMatchers("/admin/signup", "/login").permitAll() // Permit these paths
+                        .anyExchange().authenticated() // All other exchanges require authentication
                 )
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login"));
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // Disable basic auth
+                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login")); // Custom login page
 
-        return http.authenticationManager(authenticationManager()).build();
+        return http.authenticationManager(authenticationManager()).build(); // Build the security filter chain
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(); // Use BCrypt for password encoding
     }
 
     private ReactiveAuthenticationManager authenticationManager() {
