@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 public class UserValidation {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z\\s]+$");
+    private static final List<String> VALID_GENDERS = List.of("Male", "Female", "Other");
 
     public void validateUser(UserDTO<String> userDTO) {
         validateName(userDTO.getName());
@@ -20,38 +21,40 @@ public class UserValidation {
     }
 
     private void validateName(String name) {
-        boolean isInvalidName = (name == null || name.trim().isEmpty() || !NAME_PATTERN.matcher(name).matches());
-        throwExceptionIfTrue(isInvalidName, "Invalid name: " + name);
+        throwExceptionIfTrue(isBlank(name) || !NAME_PATTERN.matcher(name).matches(),
+                "Invalid name: " + name);
     }
 
     private void validateAge(int age) {
-        boolean isInvalidAge = (age < 18 || age > 65); // Example age limits
-        throwExceptionIfTrue(isInvalidAge, "Age must be between 18 and 65.");
+        throwExceptionIfTrue(age < 18 || age > 65,
+                "Age must be between 18 and 65.");
     }
 
     private void validateGender(String gender) {
-        boolean isInvalidGender = (!"Male".equalsIgnoreCase(gender) &&
-                !"Female".equalsIgnoreCase(gender) &&
-                !"Other".equalsIgnoreCase(gender));
-        throwExceptionIfTrue(isInvalidGender, "Invalid gender: " + gender);
+        throwExceptionIfTrue(isBlank(gender) || !VALID_GENDERS.contains(gender),
+                "Invalid gender: " + gender);
     }
 
     private void validateSpecialty(String specialty) {
-        boolean isInvalidSpecialty = (specialty == null || specialty.trim().isEmpty());
-        throwExceptionIfTrue(isInvalidSpecialty, "Specialty cannot be empty.");
+        throwExceptionIfTrue(isBlank(specialty),
+                "Specialty cannot be empty.");
     }
 
     private void validateRoles(List<String> roles) {
-        boolean isInvalidRoles = (roles == null || roles.isEmpty());
-        throwExceptionIfTrue(isInvalidRoles, "Roles cannot be empty.");
+        throwExceptionIfTrue(roles == null || roles.isEmpty(),
+                "Roles cannot be empty.");
+        roles.forEach(role -> throwExceptionIfTrue(isBlank(role),
+                "Role cannot be empty."));
+    }
 
-        roles.forEach(role -> {
-            boolean isInvalidRole = (role == null || role.trim().isEmpty());
-            throwExceptionIfTrue(isInvalidRole, "Role cannot be empty.");
-        });
+    // Helper methods for reuse and readability
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
     private void throwExceptionIfTrue(boolean condition, String message) {
-        if (condition) throw new IllegalArgumentException(message);
+        if (condition) {
+            throw new IllegalArgumentException(message);
+        }
     }
 }
