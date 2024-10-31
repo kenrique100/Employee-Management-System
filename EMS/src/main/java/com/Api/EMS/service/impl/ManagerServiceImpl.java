@@ -4,8 +4,9 @@ import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.service.ManagerService;
-import com.Api.EMS.utils.GUIDGenerator;
+import com.Api.EMS.utils.UserUtil;
 import com.Api.EMS.validation.UserValidation;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -15,18 +16,28 @@ public class ManagerServiceImpl implements ManagerService {
 
     private final UserRepository userRepository;
     private final UserValidation userValidation;
+    private final PasswordEncoder passwordEncoder;
 
-    public ManagerServiceImpl(UserRepository userRepository, UserValidation userValidation) {
+    public ManagerServiceImpl(UserRepository userRepository, UserValidation userValidation, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userValidation = userValidation;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public Mono<User> createUser(UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
-        User user = populateUserFields(new User(), userDTO);
-        user.setGuid(GUIDGenerator.generateGUID(8));
-        return userRepository.save(user);
+        return userRepository.existsByUsernameAndCompanyName(userDTO.getUsername(), userDTO.getCompanyName())
+                .flatMap(exists -> {
+                    if (exists) {
+                        return Mono.error(new IllegalArgumentException("User with this username and company name already exists"));
+                    }
+
+                    User user = new User();
+                    UserUtil.populateUserFields(user, userDTO);
+                    user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+                    return userRepository.save(user);
+                });
     }
 
     @Override
@@ -34,7 +45,7 @@ public class ManagerServiceImpl implements ManagerService {
         userValidation.validateUser(userDTO);
         return userRepository.findById(id)
                 .flatMap(user -> {
-                    populateUserFields(user, userDTO);
+                    UserUtil.populateUserFields(user, userDTO);
                     return userRepository.save(user);
                 });
     }
@@ -54,15 +65,5 @@ public class ManagerServiceImpl implements ManagerService {
     public Mono<User> findUserById(String id) {
         return userRepository.findById(id)
                 .switchIfEmpty(Mono.error(new RuntimeException("User not found")));
-    }
-
-    private User populateUserFields(User user, UserDTO<String> userDTO) {
-        user.setName(userDTO.getName());
-        user.setAge(userDTO.getAge());
-        user.setGender(userDTO.getGender());
-        user.setNationalIdNumber(userDTO.getNationalIdNumber());
-        user.setDateOfEmployment(userDTO.getDateOfEmployment());
-        user.setRoles(userDTO.getRoles());
-        return user;
     }
 }

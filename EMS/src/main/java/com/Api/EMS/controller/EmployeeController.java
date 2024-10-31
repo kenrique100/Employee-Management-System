@@ -2,10 +2,9 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.model.User;
 import com.Api.EMS.service.EmployeeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/employee")
