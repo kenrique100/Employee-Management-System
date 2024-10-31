@@ -1,61 +1,46 @@
 package com.Api.EMS.model;
 
-import lombok.*; // Lombok annotations for generating boilerplate code
-import org.springframework.data.annotation.Id; // MongoDB ID annotation
-import org.springframework.data.mongodb.core.mapping.Document; // Indicates this class is a MongoDB document
-import org.springframework.security.core.GrantedAuthority; // Interface for granted authority
-import org.springframework.security.core.userdetails.UserDetails; // Interface for user details in Spring Security
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection; // For collection of granted authorities
-import java.util.List; // List for roles
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Document(collection = "users") // Defines the MongoDB collection name
-@Data // Lombok annotation to generate getters, setters, toString, etc.
-@NoArgsConstructor // Lombok annotation to generate a no-argument constructor
-@AllArgsConstructor // Lombok annotation to generate a constructor with all arguments
-@Builder // Lombok annotation to provide a builder pattern for this class
+@Document(collection = "users")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User implements UserDetails {
 
     @Id
-    private String id;  // MongoDB ID field, typically a String
-
-    private String username; // Username field
-    private String password; // Password field
-    private String guid; // Unique identifier for the user
-    private String name; // User's name
-    private int age; // User's age
-    private String gender; // User's gender
-    private String nationalIdNumber; // User's national ID
-    private String dateOfEmployment; // Date of employment
-    private List<String> roles; // User's roles, stored as a list
-
-    private String specialty; // Additional field for user specialization
+    private String guid;
+    private String username;
+    private String password;
+    private List<String> roles;
+    private String name;
+    private int age;
+    private String gender;
+    private String nationalIdNumber;
+    private String dateOfEmployment;
+    private String specialty;
+    private String companyName;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Convert roles to GrantedAuthority
-        return roles.stream()
-                .map(role -> (GrantedAuthority) () -> "ROLE_" + role) // Each role is prefixed with "ROLE_"
-                .toList();
+        return roles.stream().map(role -> (GrantedAuthority) () -> "ROLE_" + role).collect(Collectors.toList());
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true; // User account is not expired
-    }
-
+    public boolean isAccountNonExpired() { return true; }
     @Override
-    public boolean isAccountNonLocked() {
-        return true; // User account is not locked
-    }
-
+    public boolean isAccountNonLocked() { return true; }
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true; // User credentials are not expired
-    }
-
+    public boolean isCredentialsNonExpired() { return true; }
     @Override
-    public boolean isEnabled() {
-        return true; // User account is enabled
-    }
+    public boolean isEnabled() { return true; }
 }
