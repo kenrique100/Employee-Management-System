@@ -1,7 +1,6 @@
 package com.Api.EMS.security;
 
-import com.Api.EMS.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.Api.EMS.service.impl.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -13,40 +12,47 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
 
-    public SecurityConfig(@Qualifier("customUserDetailsService") CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
         this.customUserDetailsService = customUserDetailsService;
     }
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable) // Disable CSRF (consider security implications)
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/admin/signup", "/login").permitAll() // Permit these paths
-                        .anyExchange().authenticated() // All other exchanges require authentication
+                        .pathMatchers("/api/auth/signup", "/api/auth/login").permitAll()
+                        .pathMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyExchange().authenticated()
                 )
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable) // Disable basic auth
-                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login")); // Custom login page
-
-        return http.authenticationManager(authenticationManager()).build(); // Build the security filter chain
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(formLoginSpec -> formLoginSpec.loginPage("/login"))
+                .authenticationManager(reactiveAuthenticationManager())
+                .build();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Use BCrypt for password encoding
+        return new BCryptPasswordEncoder();
     }
 
-    private ReactiveAuthenticationManager authenticationManager() {
+    @Bean
+    public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         return authentication -> customUserDetailsService.findByUsername(authentication.getName())
-                .map(userDetails -> new UsernamePasswordAuthenticationToken(
-                        userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities()));
+                .flatMap(userDetails -> {
+                    String password = authentication.getCredentials().toString();
+                    if (passwordEncoder().matches(password, userDetails.getPassword())) {
+                        return Mono.just(new UsernamePasswordAuthenticationToken(
+                                userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities()));
+                    } else {
+                        return Mono.empty();
+                    }
+                });
     }
 }
