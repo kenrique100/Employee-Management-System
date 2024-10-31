@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
             return Mono.error(new IllegalArgumentException("Only admins are allowed to sign up"));
         }
 
-        return userRepository.existsByUsername(authRequest.getUsername())
+        return userRepository.existsByUsernameAndCompanyName(authRequest.getUsername(), authRequest.getCompanyName())
                 .flatMap(exists -> {
                     if (exists) {
                         return Mono.error(new IllegalArgumentException("Username is taken"));
@@ -44,10 +44,9 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
-
     @Override
     public Mono<AuthResponse> login(AuthRequest authRequest) {
-        return userRepository.findByUsername(authRequest.getUsername())
+        return userRepository.findByUsernameAndCompanyName(authRequest.getUsername(), authRequest.getCompanyName())
                 .flatMap(user -> {
                     if (passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
                         return Mono.just(new AuthResponse(jwtTokenProvider.generateToken(user)));
