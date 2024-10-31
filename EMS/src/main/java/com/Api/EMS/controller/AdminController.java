@@ -17,35 +17,29 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
     private final AuthService authService;
-    private final ResponseUtil responseUtil;
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
         List<String> roles = authRequest.getRoles();
-
-        // Ensure only admins can register
         if (roles == null || !roles.contains("ADMIN")) {
-            return Mono.just(responseUtil.createErrorResponse(
-                    new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
+            return ResponseUtil.createForbiddenResponse(new AuthResponse("Only admins can register"));
         }
-
         return authService.signup(authRequest)
-                .map(responseUtil::createSuccessResponse)
-                .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
-                        new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
+                .map(response -> ResponseEntity.status(HttpStatus.CREATED).body(response))
+                .onErrorResume(e -> ResponseUtil.createBadRequestResponse(new AuthResponse("Registration failed")));
     }
 
     @PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
         return adminService.createUser(userDTO)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
+                .onErrorResume(e -> ResponseUtil.createBadRequestResponse(null));
     }
 
     @GetMapping("/users")
@@ -55,23 +49,23 @@ public class AdminController {
 
     @GetMapping("/user/{id}")
     public Mono<ResponseEntity<User>> getUserById(@PathVariable String id) {
-        return adminService.findUserById(id)
+        return adminService.getUserById(id)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse());
     }
 
     @PutMapping("/user/{id}")
     public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
         return adminService.updateUser(id, userDTO)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build())
-                .onErrorResume(e -> Mono.just(ResponseEntity.badRequest().body(null)));
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse())
+                .onErrorResume(e -> ResponseUtil.createBadRequestResponse(null));
     }
 
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
         return adminService.deleteUser(id)
                 .then(Mono.just(ResponseEntity.ok().<Void>build()))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse());
     }
 }
