@@ -5,15 +5,17 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import com.Api.EMS.model.User;
+
 import java.security.Key;
 import java.util.Date;
+
 @Component
 public class JwtTokenProvider {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    private final long EXPIRATION_TIME = 86400000;
+    private static final long EXPIRATION_TIME = 86400000L;
 
     public String generateToken(User user) {
         Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
