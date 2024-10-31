@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class AuthRequest {
+    @NotEmpty(message = "Company name is required")
     private String companyName;
 
     @NotEmpty(message = "Username is required")
