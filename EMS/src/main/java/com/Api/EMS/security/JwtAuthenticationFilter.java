@@ -1,6 +1,7 @@
 package com.Api.EMS.security;
 
-import com.Api.EMS.service.CustomUserDetailsService;
+import com.Api.EMS.service.impl.CustomUserDetailsService;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -15,13 +16,13 @@ public class JwtAuthenticationFilter implements WebFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+    public JwtAuthenticationFilter(@NonNull JwtTokenProvider jwtTokenProvider, @NonNull CustomUserDetailsService customUserDetailsService) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String token = extractToken(exchange);
         if (token != null && jwtTokenProvider.isTokenValid(token)) {
             return customUserDetailsService.findByUsername(jwtTokenProvider.getUsernameFromToken(token))
@@ -35,7 +36,7 @@ public class JwtAuthenticationFilter implements WebFilter {
         return chain.filter(exchange);
     }
 
-    private String extractToken(ServerWebExchange exchange) {
+    private String extractToken(@NonNull ServerWebExchange exchange) {
         String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         return (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
     }
