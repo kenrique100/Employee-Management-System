@@ -18,20 +18,18 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
         this.userRepository = userRepository;
     }
 
-    // Implementing the required method from ReactiveUserDetailsService
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return findByUsernameAndCompanyName(username, DEFAULT_COMPANY_NAME);
     }
 
-    // Custom method to find by both username and company name
     public Mono<UserDetails> findByUsernameAndCompanyName(String username, String companyName) {
         return userRepository.findByUsernameAndCompanyName(username, companyName)
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.getUsername())
                         .password(user.getPassword())
                         .authorities(user.getRoles().stream()
-                                .map(role -> "ROLE_" + role.toUpperCase())
+                                .map(role -> "ROLE_" + role.name())  // Use role.name() for the enum to string conversion
                                 .toArray(String[]::new))
                         .build());
     }

@@ -21,7 +21,7 @@ public class User implements UserDetails {
     private String guid;
     private String username;
     private String password;
-    private List<String> roles;
+    private List<Role> roles;  // Changed from List<String> to List<Role>
     private String name;
     private int age;
     private String gender;
@@ -30,13 +30,15 @@ public class User implements UserDetails {
     private String specialty;
     private String companyName;
 
+    // Convert roles into authorities for Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
-                .map(role -> (GrantedAuthority) () -> "ROLE_" + role)
+                .map(role -> (GrantedAuthority) () -> "ROLE_" + role.name())  // Convert Role to ROLE_ prefix
                 .collect(Collectors.toList());
     }
 
+    // Override methods from UserDetails
     @Override
     public boolean isAccountNonExpired() {
         return true;

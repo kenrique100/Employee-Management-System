@@ -2,31 +2,46 @@ package com.Api.EMS.service.impl;
 
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
+import com.Api.EMS.model.Role;  // Import Role enum
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.service.UserService;
+import com.Api.EMS.validation.UserValidation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserValidation userValidation;
 
     public UserServiceImpl(UserRepository userRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           UserValidation userValidation) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userValidation = userValidation;
     }
 
     @Override
     public Mono<User> createUser(UserDTO userDTO) {
+        userValidation.validateUser(userDTO);
+
+        // Convert List<String> roles to List<Role>
+        List<Role> roles = userDTO.getRoles().stream()
+                .map(Role::valueOf)
+                .collect(Collectors.toList());
+
         User user = User.builder()
                 .username(userDTO.getUsername())
                 .password(passwordEncoder.encode(userDTO.getPassword()))
-                .roles(userDTO.getRoles())
+                .roles(roles)
                 .name(userDTO.getName())
                 .age(userDTO.getAge())
                 .gender(userDTO.getGender())
@@ -50,13 +65,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Mono<User> updateUser(String id, UserDTO userDTO) {
+        userValidation.validateUser(userDTO);
+
         return userRepository.findById(id)
                 .flatMap(existingUser -> {
                     existingUser.setUsername(userDTO.getUsername());
                     if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
                         existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
                     }
-                    existingUser.setRoles(userDTO.getRoles());
+
+                    // Convert List<String> roles to List<Role>
+                    List<Role> roles = userDTO.getRoles().stream()
+                            .map(Role::valueOf)  // Convert each role string to Role enum
+                            .collect(Collectors.toList());
+                    existingUser.setRoles(roles);  // Set the roles as List<Role>
+
                     existingUser.setName(userDTO.getName());
                     existingUser.setAge(userDTO.getAge());
                     existingUser.setGender(userDTO.getGender());
