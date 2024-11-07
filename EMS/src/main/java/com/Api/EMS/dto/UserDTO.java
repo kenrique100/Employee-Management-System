@@ -11,10 +11,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO<T> {
+public class UserDTO {
     private String username;
     private String password;
-    private List<T> roles;
+    private List<String> roles;
     private String name;
     private int age;
     private String gender;

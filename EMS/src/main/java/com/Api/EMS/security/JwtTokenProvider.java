@@ -1,3 +1,4 @@
+// JwtTokenProvider.java
 package com.Api.EMS.security;
 
 import io.jsonwebtoken.*;
@@ -15,7 +16,7 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    private static final long EXPIRATION_TIME = 86400000L;
+    private static final long EXPIRATION_TIME = 86400000L; // 24 hours
 
     public String generateToken(User user) {
         Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -29,7 +30,11 @@ public class JwtTokenProvider {
     }
 
     public boolean isTokenValid(String token) {
-        return !extractClaims(token).getExpiration().before(new Date());
+        try {
+            return !extractClaims(token).getExpiration().before(new Date());
+        } catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException e) {
+            return false;
+        }
     }
 
     public String getUsernameFromToken(String token) {
@@ -37,8 +42,9 @@ public class JwtTokenProvider {
     }
 
     private Claims extractClaims(String token) {
+        Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY.getBytes())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
