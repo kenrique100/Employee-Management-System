@@ -35,21 +35,20 @@ public class SecurityConfig {
     @Bean
     public ReactiveAuthenticationManager reactiveAuthenticationManager() {
         return authentication -> customUserDetailsService.findByUsername(authentication.getName())
-                .flatMap(userDetails -> {
-                    String password = authentication.getCredentials().toString();
-                    if (passwordEncoder().matches(password, userDetails.getPassword())) {
-                        return Mono.just(new UsernamePasswordAuthenticationToken(
-                                userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities()));
-                    } else {
-                        return Mono.empty();
-                    }
-                });
+                .flatMap(userDetails -> checkPassword(userDetails.getPassword(), authentication.getCredentials().toString())
+                        ? Mono.just(new UsernamePasswordAuthenticationToken(
+                        userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities()))
+                        : Mono.empty());
+    }
+
+    private boolean checkPassword(String storedPassword, String providedPassword) {
+        return passwordEncoder().matches(providedPassword, storedPassword);
     }
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .csrf(csrf -> csrf.disable())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers("/api/auth/signup", "/api/auth/login").permitAll()
                         .pathMatchers("/api/admin/**").hasRole("ADMIN")
@@ -60,8 +59,8 @@ public class SecurityConfig {
                 )
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHORIZATION)
                 .authenticationManager(reactiveAuthenticationManager())
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .formLogin(formLogin -> formLogin.disable())
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .build();
     }
 }
