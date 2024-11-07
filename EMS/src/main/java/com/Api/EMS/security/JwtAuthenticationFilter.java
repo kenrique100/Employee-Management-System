@@ -2,6 +2,7 @@
 package com.Api.EMS.security;
 
 import com.Api.EMS.service.impl.CustomUserDetailsService;
+import com.Api.EMS.utils.JwtUtil;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,19 +15,19 @@ import reactor.core.publisher.Mono;
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtAuthenticationFilter(@NonNull JwtTokenProvider jwtTokenProvider, @NonNull CustomUserDetailsService customUserDetailsService) {
-        this.jwtTokenProvider = jwtTokenProvider;
+    public JwtAuthenticationFilter(@NonNull JwtUtil jwtUtil, @NonNull CustomUserDetailsService customUserDetailsService) {
+        this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         String token = extractToken(exchange);
-        if (token != null && jwtTokenProvider.isTokenValid(token)) {
-            return customUserDetailsService.findByUsername(jwtTokenProvider.getUsernameFromToken(token))
+        if (token != null && jwtUtil.validateToken(token)) {
+            return customUserDetailsService.findByUsername(jwtUtil.getUsernameFromToken(token))
                     .flatMap(userDetails -> {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
