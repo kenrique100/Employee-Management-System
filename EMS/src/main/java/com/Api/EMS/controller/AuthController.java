@@ -18,27 +18,23 @@ import java.util.List;
 public class AuthController {
 
     private final AuthService authService;
-    private final ResponseUtil responseUtil;
 
     @PostMapping("/login")
     public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
         return authService.login(authRequest)
-                .map(responseUtil::createSuccessResponse)
-                .defaultIfEmpty(responseUtil.createErrorResponse(
-                        new AuthResponse("Authentication failed"), HttpStatus.UNAUTHORIZED));
+                .map(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createErrorResponse(HttpStatus.UNAUTHORIZED, AuthResponse.class));
     }
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
         List<String> roles = authRequest.getRoles();
         if (roles == null || !roles.contains("ADMIN")) {
-            return Mono.just(responseUtil.createErrorResponse(
-                    new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN));
+            return ResponseUtil.createForbiddenResponse(AuthResponse.class);
         }
 
         return authService.signup(authRequest)
-                .map(responseUtil::createSuccessResponse)
-                .onErrorResume(e -> Mono.just(responseUtil.createErrorResponse(
-                        new AuthResponse("Registration failed"), HttpStatus.BAD_REQUEST)));
+                .map(ResponseUtil::createSuccessResponse)
+                .onErrorResume(e -> ResponseUtil.createBadRequestResponse(AuthResponse.class));
     }
 }
