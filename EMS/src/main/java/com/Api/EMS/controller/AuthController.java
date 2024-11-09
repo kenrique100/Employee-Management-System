@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -15,16 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
-    private final ResponseUtil responseUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
-        try {
-            AuthResponse response = authService.login(authRequest);
-            return responseUtil.createSuccessResponse(response);
-        } catch (Exception e) {
-            return responseUtil.createErrorResponse(
-                    new AuthResponse("Authentication failed"), HttpStatus.UNAUTHORIZED);
-        }
+    public Mono<ResponseEntity<AuthResponse>> login(@RequestBody AuthRequest authRequest) {
+        return authService.login(authRequest)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createErrorResponse(HttpStatus.UNAUTHORIZED, AuthResponse.class));
     }
+
 }

@@ -2,20 +2,29 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.model.User;
 import com.Api.EMS.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.utils.ResponseUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/employee")
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeService employeeService;
+    private final EmployeeService employeeService;
+
+    // Constructor injection
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
+    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(employeeService.getUserById(id).block());
+    public Mono<Mono<ResponseEntity<User>>> getUserById(@PathVariable String id) {
+        return employeeService.getUserById(id)
+                .map(ResponseUtil::createSuccessResponse)
+                .defaultIfEmpty(ResponseUtil.createNotFoundResponse(User.class));  // No blocking call
     }
 }
+
+
+

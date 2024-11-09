@@ -3,18 +3,21 @@ package com.Api.EMS.service.impl;
 import com.Api.EMS.dto.AuthRequest;
 import com.Api.EMS.dto.AuthResponse;
 import com.Api.EMS.dto.UserDTO;
+import com.Api.EMS.model.Role;
 import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
-import com.Api.EMS.security.JwtTokenProvider;
 import com.Api.EMS.service.AdminService;
 import com.Api.EMS.utils.GUIDGenerator;
+import com.Api.EMS.utils.JwtUtil;
+import com.Api.EMS.utils.UserUtil;
 import com.Api.EMS.validation.UserValidation;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @Service
 @Transactional
@@ -23,79 +26,69 @@ public class AdminServiceImpl implements AdminService {
     private final UserRepository userRepository;
     private final UserValidation userValidation;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtUtil jwtUtil;
 
-    public AdminServiceImpl(UserRepository userRepository, UserValidation userValidation, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public AdminServiceImpl(UserRepository userRepository, UserValidation userValidation, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.userValidation = userValidation;
         this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
-    public AuthResponse signup(AuthRequest authRequest) {
-        if (authRequest.getRoles() == null || !authRequest.getRoles().contains("ADMIN")) {
-            throw new IllegalArgumentException("Only admins are allowed to sign up");
+    public Mono<AuthResponse> signup(AuthRequest authRequest) {
+        if (!authRequest.getRoles().contains("ADMIN")) {
+            return Mono.error(new IllegalArgumentException("Only admins are allowed to sign up."));
         }
 
-        if (userRepository.existsByUsername(authRequest.getUsername())) {
-            throw new IllegalArgumentException("Username is taken");
-        }
+        return userRepository.existsByUsernameAndCompanyName(authRequest.getUsername(), authRequest.getCompanyName())
+                .filter(exists -> !exists)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Username is already taken.")))
+                .flatMap(exists -> {
+                    User user = User.builder()
+                            .guid(GUIDGenerator.generateGUID(8))
+                            .companyName(authRequest.getCompanyName())
+                            .username(authRequest.getUsername())
+                            .password(passwordEncoder.encode(authRequest.getPassword()))
+                            .roles(List.of(Role.ADMIN))
+                            .build();
 
-        User user = User.builder()
-                .companyName(authRequest.getCompanyName())
-                .username(authRequest.getUsername())
-                .password(passwordEncoder.encode(authRequest.getPassword()))
-                .roles(List.of("ADMIN"))
-                .build();
-
-        User savedUser = userRepository.save(user);
-        return new AuthResponse(jwtTokenProvider.generateToken(savedUser));
+                    return userRepository.save(user)
+                            .map(savedUser -> new AuthResponse(jwtUtil.generateToken(savedUser)));
+                });
     }
 
     @Override
-    public User createUser(UserDTO<String> userDTO) {
+    public Mono<User> createUser(UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
-        User user = populateUserFields(new User(), userDTO);
+        User user = UserUtil.populateUserFields(new User(), userDTO);
         user.setGuid(GUIDGenerator.generateGUID(8));
         return userRepository.save(user);
     }
 
     @Override
-    public Optional<User> updateUser(Long id, UserDTO<String> userDTO) {
+    public Mono<User> updateUser(String id, UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
-        return userRepository.findById(id).map(user -> {
-            populateUserFields(user, userDTO);
-            return userRepository.save(user);
-        });
+        return userRepository.findById(id)
+                .flatMap(user -> {
+                    UserUtil.populateUserFields(user, userDTO);
+                    return userRepository.save(user);
+                });
     }
 
     @Override
-    public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public Mono<Boolean> deleteUser(String id) {
+        return userRepository.existsById(id)
+                .flatMap(exists -> exists ? userRepository.deleteById(id).thenReturn(true) : Mono.just(false));
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public Flux<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     @Override
-    public Optional<User> findUserById(Long id) {
+    public Mono<User> findUserById(String id) {
         return userRepository.findById(id);
-    }
-
-    private User populateUserFields(User user, UserDTO<String> userDTO) {
-        user.setName(userDTO.getName());
-        user.setAge(userDTO.getAge());
-        user.setGender(userDTO.getGender());
-        user.setNationalIdNumber(userDTO.getNationalIdNumber());
-        user.setDateOfEmployment(userDTO.getDateOfEmployment());
-        user.setRoles(userDTO.getRoles());
-        return user;
     }
 }

@@ -3,15 +3,25 @@ package com.Api.EMS.utils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 public class ResponseUtil {
 
-    public <T> ResponseEntity<T> createSuccessResponse(T body) {
-        return ResponseEntity.ok(body);
+    public static <T> Mono<ResponseEntity<T>> createErrorResponse(HttpStatus status, Class<T> clazz) {
+        return Mono.just(ResponseEntity.status(status).body(null));
     }
 
-    public <T> ResponseEntity<T> createErrorResponse(T body, HttpStatus status) {
-        return ResponseEntity.status(status).body(body);
+    public static <T> Mono<ResponseEntity<T>> createErrorResponse(T body, HttpStatus status) {
+        return Mono.just(ResponseEntity.status(status).body(body));
+    }
+
+    public static <T> Mono<ResponseEntity<T>> createNotFoundResponse(Class<T> clazz) {
+        return createErrorResponse(HttpStatus.NOT_FOUND, clazz);
+    }
+
+
+    public static <T> Mono<ResponseEntity<T>> createSuccessResponse(T body) {
+        return Mono.just(ResponseEntity.ok(body));
     }
 }

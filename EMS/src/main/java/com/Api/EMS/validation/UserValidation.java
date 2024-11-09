@@ -25,7 +25,7 @@ public class UserValidation {
     }
 
     private void validateAge(int age) {
-        boolean isInvalidAge = (age < 18 || age > 65); // Example age limits
+        boolean isInvalidAge = (age < 18 || age > 65);
         throwExceptionIfTrue(isInvalidAge, "Age must be between 18 and 65.");
     }
 

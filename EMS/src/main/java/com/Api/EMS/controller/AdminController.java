@@ -11,54 +11,54 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
-    private final ResponseUtil responseUtil;
 
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> signupAdmin(@RequestBody AuthRequest authRequest) {
-        ResponseEntity<AuthResponse> validationResponse = AuthValidationUtil.validateAdminRole(authRequest, responseUtil);
-        return validationResponse != null ? validationResponse : ResponseEntity.ok(adminService.signup(authRequest));
+    public Mono<ResponseEntity<AuthResponse>> signupAdmin(@RequestBody AuthRequest authRequest) {
+        return AuthValidationUtil.validateAdminRole(authRequest)
+                .switchIfEmpty(adminService.signup(authRequest)
+                        .flatMap(ResponseUtil::createSuccessResponse)
+                        .onErrorResume(e -> ResponseUtil.createErrorResponse(new AuthResponse(e.getMessage()), HttpStatus.BAD_REQUEST)));
     }
 
     @PostMapping("/user")
-    public ResponseEntity<User> createUser(@RequestBody UserDTO<String> userDTO) {
-        try {
-            User user = adminService.createUser(userDTO);
-            return responseUtil.createSuccessResponse(user);
-        } catch (Exception e) {
-            return responseUtil.createErrorResponse(null, HttpStatus.BAD_REQUEST);
-        }
+    public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
+        return adminService.createUser(userDTO)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .onErrorResume(e -> ResponseUtil.createErrorResponse(HttpStatus.BAD_REQUEST, User.class));
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return responseUtil.createSuccessResponse(adminService.getAllUsers());
+    public Flux<ResponseEntity<User>> getAllUsers() {
+        return adminService.getAllUsers()
+                .flatMap(ResponseUtil::createSuccessResponse);
     }
 
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public Mono<ResponseEntity<User>> getUserById(@PathVariable String id) {
         return adminService.findUserById(id)
-                .map(responseUtil::createSuccessResponse)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 
     @PutMapping("/user/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
         return adminService.updateUser(id, userDTO)
-                .map(responseUtil::createSuccessResponse)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 
     @DeleteMapping("/user/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        return adminService.deleteUser(id) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
+        return adminService.deleteUser(id)
+                .flatMap(deleted -> deleted ? ResponseUtil.createSuccessResponse(null) : ResponseUtil.createNotFoundResponse(Void.class));
     }
 }

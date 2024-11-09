@@ -1,17 +1,16 @@
 package com.Api.EMS.repository;
 
 import com.Api.EMS.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
+public interface UserRepository extends ReactiveMongoRepository<User, String> {
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+    Mono<User> findByUsernameAndCompanyName(String username, String companyName);
 
-    Optional<User> findByUsername(String username);
-
-    default boolean existsByUsername(String username) {
-        return findByUsername(username).isPresent();
+    default Mono<Boolean> existsByUsernameAndCompanyName(String username, String companyName) {
+        return findByUsernameAndCompanyName(username, companyName)
+                .map(user -> true)
+                .defaultIfEmpty(false);
     }
 }

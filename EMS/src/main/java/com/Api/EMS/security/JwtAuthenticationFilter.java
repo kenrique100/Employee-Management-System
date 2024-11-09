@@ -1,51 +1,45 @@
+// JwtAuthenticationFilter.java
 package com.Api.EMS.security;
 
-import com.Api.EMS.service.impl.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.Api.EMS.service.CustomUserDetailsService;
+import com.Api.EMS.utils.JwtUtil;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter implements WebFilter {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsServiceImpl userDetailsServiceImpl;
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    @Autowired
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UserDetailsServiceImpl userDetailsServiceImpl) {
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.userDetailsServiceImpl = userDetailsServiceImpl;
+    public JwtAuthenticationFilter(@NonNull JwtUtil jwtUtil, @NonNull CustomUserDetailsService customUserDetailsService) {
+        this.jwtUtil = jwtUtil;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = extractToken(request);
-
-        if (token != null && jwtTokenProvider.isTokenValid(token)) {
-            String username = jwtTokenProvider.getUsernameFromToken(token);
-            UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
-
-            if (userDetails != null) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
+        String token = extractToken(exchange);
+        if (token != null && jwtUtil.validateToken(token)) {
+            return customUserDetailsService.findByUsername(jwtUtil.getUsernameFromToken(token))
+                    .flatMap(userDetails -> {
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        return chain.filter(exchange);
+                    });
         }
-
-        filterChain.doFilter(request, response);
+        return chain.filter(exchange);
     }
 
-    private String extractToken(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
+    private String extractToken(@NonNull ServerWebExchange exchange) {
+        String authHeader = exchange.getRequest().getHeaders().getFirst("Authorization");
         return (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
     }
 }

@@ -4,15 +4,15 @@ import com.Api.EMS.dto.AuthRequest;
 import com.Api.EMS.dto.AuthResponse;
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface AdminService {
-    AuthResponse signup(AuthRequest authRequest);
-    User createUser(UserDTO<String> userDTO);
-    Optional<User> updateUser(Long id, UserDTO<String> userDTO);
-    boolean deleteUser(Long id);
-    List<User> getAllUsers();
-    Optional<User> findUserById(Long id);
+    Mono<AuthResponse> signup(AuthRequest authRequest);
+    Mono<User> createUser(UserDTO<String> userDTO);
+    Mono<User> updateUser(String id, UserDTO<String> userDTO);
+    Mono<Boolean> deleteUser(String id);
+    Flux<User> getAllUsers();
+    Mono<User> findUserById(String id);
 }
+

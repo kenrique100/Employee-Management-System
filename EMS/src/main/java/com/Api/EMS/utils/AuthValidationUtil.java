@@ -9,10 +9,11 @@ import java.util.List;
 
 public class AuthValidationUtil {
 
-    public static ResponseEntity<AuthResponse> validateAdminRole(AuthRequest authRequest, ResponseUtil responseUtil) {
+    public static ResponseEntity<AuthResponse> validateAdminRole(AuthRequest authRequest) {
         List<String> roles = authRequest.getRoles();
         boolean isAdmin = roles != null && roles.contains("ADMIN");
-        return isAdmin ? null : responseUtil.createErrorResponse(
+
+        return isAdmin ? null : ResponseUtil.createErrorResponse(
                 new AuthResponse("Only admins can register"), HttpStatus.FORBIDDEN);
     }
 }

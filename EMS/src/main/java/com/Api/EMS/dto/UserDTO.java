@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO<T> {
+    private String companyName;
     private String name;
     private int age;
     private String gender;

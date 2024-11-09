@@ -28,12 +28,12 @@ public class DirectorController {
     }
 
     @PutMapping("/user/{id}")
-    public Mono<ResponseEntity<User>> updateUser(@PathVariable Long id, @RequestBody UserDTO<String> userDTO) {
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
         return handleMonoResponse(directorService.updateUser(id, userDTO));
     }
 
     @DeleteMapping("/user/{id}")
-    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable Long id) {
+    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
         return directorService.deleteUser(id)
                 .thenReturn(ResponseEntity.ok().<Void>build())
                 .defaultIfEmpty(ResponseEntity.notFound().build());
@@ -46,7 +46,7 @@ public class DirectorController {
     }
 
     @GetMapping("/user/{id}")
-    public Mono<ResponseEntity<User>> findUserById(@PathVariable Long id) {
+    public Mono<ResponseEntity<User>> findUserById(@PathVariable String id) {
         return handleMonoResponse(directorService.findUserById(id));
     }
 }
