@@ -1,11 +1,11 @@
+// ResponseUtil.java
 package com.Api.EMS.utils;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Component
 public class ResponseUtil {
 
     public static <T> Mono<ResponseEntity<T>> createErrorResponse(HttpStatus status, Class<T> clazz) {
@@ -20,8 +20,15 @@ public class ResponseUtil {
         return createErrorResponse(HttpStatus.NOT_FOUND, clazz);
     }
 
-
     public static <T> Mono<ResponseEntity<T>> createSuccessResponse(T body) {
         return Mono.just(ResponseEntity.ok(body));
     }
+
+    // Updated method
+    public static <T> Mono<ResponseEntity<T>> handleMonoResponse(T response) {
+        return response != null
+                ? Mono.just(ResponseEntity.ok(response))
+                : Mono.empty();
+    }
+
 }

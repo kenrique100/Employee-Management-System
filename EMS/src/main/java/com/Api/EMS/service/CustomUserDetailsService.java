@@ -1,6 +1,7 @@
 package com.Api.EMS.service;
 
 import com.Api.EMS.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
@@ -9,28 +10,18 @@ import reactor.core.publisher.Mono;
 
 @Service
 @Primary
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements ReactiveUserDetailsService {
 
     private final UserRepository userRepository;
-    private static final String DEFAULT_COMPANY_NAME = "DefaultCompany";
-
-    public CustomUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-        return findByUsernameAndCompanyName(username, DEFAULT_COMPANY_NAME);
-    }
-
-    public Mono<UserDetails> findByUsernameAndCompanyName(String username, String companyName) {
-        return userRepository.findByUsernameAndCompanyName(username, companyName)
+        return userRepository.findByUsername(username)
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.getUsername())
                         .password(user.getPassword())
-                        .authorities(user.getRoles().stream()
-                                .map(role -> "ROLE_" + role.name())  // Use role.name() for the enum to string conversion
-                                .toArray(String[]::new))
+                        .authorities(user.getRoles().stream().map(role -> "ROLE_" + role.name()).toArray(String[]::new))
                         .build());
     }
 }

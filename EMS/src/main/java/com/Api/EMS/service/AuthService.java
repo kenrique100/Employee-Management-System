@@ -5,5 +5,5 @@ import com.Api.EMS.dto.AuthResponse;
 import reactor.core.publisher.Mono;
 
 public interface AuthService {
-    Mono<AuthResponse> login(AuthRequest authRequest);
+    Mono<AuthResponse> authenticate(AuthRequest authRequest);
 }

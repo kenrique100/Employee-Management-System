@@ -7,12 +7,12 @@ import com.Api.EMS.model.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface AdminService {
+public interface UserService<T extends User> {
     Mono<AuthResponse> signup(AuthRequest authRequest);
-    Mono<User> createUser(UserDTO<String> userDTO);
-    Mono<User> updateUser(String id, UserDTO<String> userDTO);
+    Mono<T> createUser(UserDTO<String> userDTO);
+    Mono<T> updateUser(String id, UserDTO<String> userDTO);
     Mono<Boolean> deleteUser(String id);
-    Flux<User> getAllUsers();
-    Mono<User> findUserById(String id);
+    Flux<T> getAllUsers();
+    Mono<T> getUserById(String id);
+    Mono<T> getUserByUsername(String username);
 }
-

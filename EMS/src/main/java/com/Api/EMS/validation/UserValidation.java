@@ -1,6 +1,7 @@
 package com.Api.EMS.validation;
 
 import com.Api.EMS.dto.UserDTO;
+import com.Api.EMS.model.Role;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -41,15 +42,11 @@ public class UserValidation {
         throwExceptionIfTrue(isInvalidSpecialty, "Specialty cannot be empty.");
     }
 
-    private void validateRoles(List<String> roles) {
+    private void validateRoles(List<Role> roles) {
         boolean isInvalidRoles = (roles == null || roles.isEmpty());
         throwExceptionIfTrue(isInvalidRoles, "Roles cannot be empty.");
-
-        roles.forEach(role -> {
-            boolean isInvalidRole = (role == null || role.trim().isEmpty());
-            throwExceptionIfTrue(isInvalidRole, "Role cannot be empty.");
-        });
     }
+
 
     private void throwExceptionIfTrue(boolean condition, String message) {
         if (condition) throw new IllegalArgumentException(message);

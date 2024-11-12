@@ -1,5 +1,6 @@
 package com.Api.EMS.model;
 
+import com.Api.EMS.dto.UserDTO;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,35 +11,48 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Document(collection = "users")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "users")
 public class User implements UserDetails {
 
     @Id
     private String guid;
     private String username;
     private String password;
-    private List<Role> roles;  // Changed from List<String> to List<Role>
+    private List<Role> roles;
     private String name;
     private int age;
+    private String telephoneNumber;
     private String gender;
     private String nationalIdNumber;
     private String dateOfEmployment;
     private String specialty;
-    private String companyName;
+    private String email;
 
-    // Convert roles into authorities for Spring Security
+    public void updateFromDTO(UserDTO<String> userDTO) {
+        this.username = userDTO.getUsername();
+        this.password = userDTO.getPassword();
+        this.roles = userDTO.getRoles();
+        this.name = userDTO.getName();
+        this.age = userDTO.getAge();
+        this.telephoneNumber = userDTO.getTelephoneNumber();
+        this.gender = userDTO.getGender();
+        this.nationalIdNumber = userDTO.getNationalIdNumber();
+        this.dateOfEmployment = userDTO.getDateOfEmployment();
+        this.specialty = userDTO.getSpecialty();
+        this.email = userDTO.getEmail();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
-                .map(role -> (GrantedAuthority) () -> "ROLE_" + role.name())  // Convert Role to ROLE_ prefix
+                .map(role -> (GrantedAuthority) () -> "ROLE_" + role.name())
                 .collect(Collectors.toList());
     }
 
-    // Override methods from UserDetails
     @Override
     public boolean isAccountNonExpired() {
         return true;

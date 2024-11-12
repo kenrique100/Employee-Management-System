@@ -2,8 +2,10 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
-import com.Api.EMS.service.DirectorService;
+import com.Api.EMS.service.UserService;
+import com.Api.EMS.utils.ResponseUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -14,39 +16,40 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class DirectorController {
 
-    private final DirectorService directorService;
-
-    private <T> Mono<ResponseEntity<T>> handleMonoResponse(Mono<T> monoResponse) {
-        return monoResponse
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
+    private final UserService<User> userService;
 
     @PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
-        return handleMonoResponse(directorService.createUser(userDTO));
+        return userService.createUser(userDTO)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .onErrorResume(e -> ResponseUtil.createErrorResponse(HttpStatus.BAD_REQUEST, User.class));
     }
 
     @PutMapping("/user/{id}")
     public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
-        return handleMonoResponse(directorService.updateUser(id, userDTO));
+        return userService.updateUser(id, userDTO)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
-        return directorService.deleteUser(id)
-                .thenReturn(ResponseEntity.ok().<Void>build())
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+        return userService.deleteUser(id)
+                .flatMap(deleted -> deleted
+                        ? ResponseUtil.createSuccessResponse(null)
+                        : ResponseUtil.createNotFoundResponse(Void.class));
     }
 
     @GetMapping("/users")
     public Flux<ResponseEntity<User>> getAllUsers() {
-        return directorService.getAllUsers()
-                .map(ResponseEntity::ok);
+        return userService.getAllUsers()
+                .flatMap(ResponseUtil::createSuccessResponse);
     }
 
     @GetMapping("/user/{id}")
     public Mono<ResponseEntity<User>> findUserById(@PathVariable String id) {
-        return handleMonoResponse(directorService.findUserById(id));
+        return userService.getUserById(id)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 }

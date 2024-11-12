@@ -1,7 +1,5 @@
-package com.Api.EMS.utils;
+package com.Api.EMS.security;
 
-import com.Api.EMS.model.User;
-import com.Api.EMS.model.Role;  // Import Role enum
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +11,6 @@ import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -25,6 +22,9 @@ public class JwtUtil {
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;
 
+    @Value("${jwt.refresh-expiration-ms}")
+    private long refreshExpirationMs;
+
     private SecretKey key;
 
     @PostConstruct
@@ -32,16 +32,21 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    public String generateToken(User user) {
-        List<String> roles = user.getRoles().stream()
-                .map(Role::name)
-                .collect(Collectors.toList());
-
+    public String generateAccessToken(String username, List<String> roles) {
         return Jwts.builder()
-                .setSubject(user.getUsername())
+                .setSubject(username)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String generateRefreshToken(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -54,9 +59,18 @@ public class JwtUtil {
         try {
             getClaimsFromToken(token);
             return true;
-        } catch (Exception ex) {
+        } catch (JwtException ex) {
             log.error("Invalid JWT token", ex);
             return false;
+        }
+    }
+
+    public String refreshAccessToken(@NonNull String refreshToken) {
+        if (validateToken(refreshToken)) {
+            String username = getUsernameFromToken(refreshToken);
+            return generateAccessToken(username, List.of("ADMIN"));
+        } else {
+            throw new JwtException("Invalid or expired refresh token.");
         }
     }
 

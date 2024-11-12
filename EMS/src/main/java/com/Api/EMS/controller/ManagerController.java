@@ -2,8 +2,10 @@ package com.Api.EMS.controller;
 
 import com.Api.EMS.dto.UserDTO;
 import com.Api.EMS.model.User;
-import com.Api.EMS.service.ManagerService;
+import com.Api.EMS.service.UserService;
+import com.Api.EMS.utils.ResponseUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -14,40 +16,40 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ManagerController {
 
-    private final ManagerService managerService;
-
-    // Utility method to handle Mono responses
-    private <T> Mono<ResponseEntity<T>> handleMonoResponse(Mono<T> monoResponse) {
-        return monoResponse
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
+    private final UserService<User> userService;
 
     @PostMapping("/user")
     public Mono<ResponseEntity<User>> createUser(@RequestBody UserDTO<String> userDTO) {
-        return handleMonoResponse(managerService.createUser(userDTO));
+        return userService.createUser(userDTO)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .onErrorResume(e -> ResponseUtil.createErrorResponse(HttpStatus.BAD_REQUEST, User.class));
     }
 
     @PutMapping("/user/{id}")
     public Mono<ResponseEntity<User>> updateUser(@PathVariable String id, @RequestBody UserDTO<String> userDTO) {
-        return handleMonoResponse(managerService.updateUser(id, userDTO));
+        return userService.updateUser(id, userDTO)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 
     @DeleteMapping("/user/{id}")
     public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
-        return managerService.deleteUser(id)
-                .thenReturn(ResponseEntity.ok().<Void>build())  // Return OK status on success
-                .defaultIfEmpty(ResponseEntity.notFound().build()); // Return NOT FOUND if no user is deleted
+        return userService.deleteUser(id)
+                .flatMap(deleted -> deleted
+                        ? ResponseUtil.createSuccessResponse(null)
+                        : ResponseUtil.createNotFoundResponse(Void.class));
     }
 
     @GetMapping("/users")
     public Flux<ResponseEntity<User>> getAllUsers() {
-        return managerService.getAllUsers()
-                .map(ResponseEntity::ok);  // Return a list of users with OK status
+        return userService.getAllUsers()
+                .flatMap(ResponseUtil::createSuccessResponse);
     }
 
     @GetMapping("/user/{id}")
     public Mono<ResponseEntity<User>> findUserById(@PathVariable String id) {
-        return handleMonoResponse(managerService.findUserById(id));
+        return userService.getUserById(id)
+                .flatMap(ResponseUtil::createSuccessResponse)
+                .switchIfEmpty(ResponseUtil.createNotFoundResponse(User.class));
     }
 }
