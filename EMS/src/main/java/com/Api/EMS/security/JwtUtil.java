@@ -11,6 +11,7 @@ import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -59,23 +60,41 @@ public class JwtUtil {
         try {
             getClaimsFromToken(token);
             return true;
+        } catch (ExpiredJwtException ex) {
+            log.error("Expired JWT token", ex);
+        } catch (UnsupportedJwtException ex) {
+            log.error("Unsupported JWT token", ex);
+        } catch (MalformedJwtException ex) {
+            log.error("Malformed JWT token", ex);
         } catch (JwtException ex) {
             log.error("Invalid JWT token", ex);
-            return false;
         }
+        return false;
     }
+
 
     public String refreshAccessToken(@NonNull String refreshToken) {
         if (validateToken(refreshToken)) {
             String username = getUsernameFromToken(refreshToken);
-            return generateAccessToken(username, List.of("ADMIN"));
+            List<String> roles = getRolesFromToken(refreshToken);
+            return generateAccessToken(username, roles);
         } else {
             throw new JwtException("Invalid or expired refresh token.");
         }
     }
 
+
     private Jws<Claims> getClaimsFromToken(@NonNull String token) {
         JwtParser parser = Jwts.parserBuilder().setSigningKey(key).build();
         return parser.parseClaimsJws(token);
+    }
+
+    public List<String> getRolesFromToken(String token) {
+        Claims claims = getClaimsFromToken(token).getBody();
+        List<?> rawRoles = claims.get("roles", List.class);
+        return rawRoles.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .collect(Collectors.toList());
     }
 }
