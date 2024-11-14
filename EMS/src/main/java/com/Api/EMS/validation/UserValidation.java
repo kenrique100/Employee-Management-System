@@ -14,6 +14,7 @@ public class UserValidation {
 
     public void validateUser(UserDTO<String> userDTO) {
         validateName(userDTO.getName());
+        validateDateOfBirth(userDTO.getDateOfBirth());
         validateAge(userDTO.getAge());
         validateGender(userDTO.getGender());
         validateSpecialty(userDTO.getSpecialty());
@@ -25,9 +26,15 @@ public class UserValidation {
         throwExceptionIfTrue(isInvalidName, "Invalid name: " + name);
     }
 
+    private void validateDateOfBirth(int dateOfBirth) {
+        boolean isInvalidDateOfBirth = (dateOfBirth < 1945 || dateOfBirth > 2007);
+        throwExceptionIfTrue(isInvalidDateOfBirth, "Date of birth must be between 1944 and 2006.");
+    }
+
+
     private void validateAge(int age) {
-        boolean isInvalidAge = (age < 18 || age > 65);
-        throwExceptionIfTrue(isInvalidAge, "Age must be between 18 and 65.");
+        boolean isInvalidAge = (age < 18 || age > 80);
+        throwExceptionIfTrue(isInvalidAge, "Age must be between 18 and 80.");
     }
 
     private void validateGender(String gender) {
