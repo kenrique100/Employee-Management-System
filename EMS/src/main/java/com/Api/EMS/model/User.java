@@ -24,6 +24,7 @@ public class User implements UserDetails {
     private String password;
     private List<Role> roles;
     private String name;
+    private int dateOfBirth;
     private int age;
     private String telephoneNumber;
     private String gender;
@@ -37,6 +38,7 @@ public class User implements UserDetails {
         this.password = userDTO.getPassword();
         this.roles = userDTO.getRoles();
         this.name = userDTO.getName();
+        this.dateOfBirth = userDTO.getDateOfBirth();
         this.age = userDTO.getAge();
         this.telephoneNumber = userDTO.getTelephoneNumber();
         this.gender = userDTO.getGender();
