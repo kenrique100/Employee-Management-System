@@ -14,5 +14,4 @@ public interface UserService<T extends User> {
     Mono<Boolean> deleteUser(String id);
     Flux<T> getAllUsers();
     Mono<T> getUserById(String id);
-    Mono<T> getUserByUsername(String username);
 }
