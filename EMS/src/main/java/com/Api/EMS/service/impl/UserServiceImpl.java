@@ -8,7 +8,7 @@ import com.Api.EMS.model.User;
 import com.Api.EMS.repository.UserRepository;
 import com.Api.EMS.security.JwtUtil;
 import com.Api.EMS.service.UserService;
-import com.Api.EMS.utils.PasswordUtil;
+import com.Api.EMS.utils.GUIDGenerator;
 import com.Api.EMS.utils.UserUtil;
 import com.Api.EMS.validation.UserValidation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,23 +20,21 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Service("userServiceImpl")
+@Service
 public class UserServiceImpl implements UserService<User> {
 
     private final UserRepository userRepository;
-    private final PasswordUtil passwordUtil;
     private final UserValidation userValidation;
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, UserValidation userValidation,
-                           PasswordEncoder passwordEncoder, JwtUtil jwtUtil, PasswordUtil passwordUtil) {
+                           PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.userValidation = userValidation;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.passwordUtil = passwordUtil;
     }
 
     @Override
@@ -48,6 +46,7 @@ public class UserServiceImpl implements UserService<User> {
                 .flatMap(existingUser -> Mono.error(new IllegalArgumentException("Username is already taken.")))
                 .switchIfEmpty(Mono.defer(() -> {
                     User user = UserUtil.populateUserFields(new User(), authRequest, passwordEncoder);
+                    user.setGuid(GUIDGenerator.generateGUID(16));
                     user.setRoles(List.of(Role.ADMIN));
                     return userRepository.save(user)
                             .map(savedUser -> {
@@ -63,15 +62,12 @@ public class UserServiceImpl implements UserService<User> {
                 .cast(AuthResponse.class);
     }
 
+
     @Override
     public Mono<User> createUser(UserDTO<String> userDTO) {
         userValidation.validateUser(userDTO);
-
-        User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setPassword(passwordUtil.encode(userDTO.getPassword()));
-        user.setRoles(userDTO.getRoles());
-
+        User user = UserUtil.populateUserFields(new User(), userDTO, passwordEncoder);
+        user.setGuid(GUIDGenerator.generateGUID(16)); // Generate GUID for new user
         return userRepository.save(user);
     }
 
@@ -89,9 +85,7 @@ public class UserServiceImpl implements UserService<User> {
     public Mono<User> updateUser(String id, UserDTO<String> userDTO) {
         return userRepository.findById(id).flatMap(user -> {
             userValidation.validateUser(userDTO);
-            user.setUsername(userDTO.getUsername());
-            user.setPassword(passwordUtil.encode(userDTO.getPassword()));
-            user.setRoles(userDTO.getRoles());
+            UserUtil.populateUserFields(user, userDTO, passwordEncoder); // Reuse populateUserFields method
             return userRepository.save(user);
         });
     }
@@ -101,11 +95,6 @@ public class UserServiceImpl implements UserService<User> {
         return userRepository.findById(id)
                 .flatMap(user -> userRepository.deleteById(id)
                         .then(Mono.just(true)))
-                .switchIfEmpty(Mono.just(false));
-    }
-
-    @Override
-    public Mono<User> getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
+                .defaultIfEmpty(false);
     }
 }
