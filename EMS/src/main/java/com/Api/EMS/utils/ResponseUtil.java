@@ -1,9 +1,7 @@
-// ResponseUtil.java
 package com.Api.EMS.utils;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class ResponseUtil {
@@ -24,7 +22,6 @@ public class ResponseUtil {
         return Mono.just(ResponseEntity.ok(body));
     }
 
-    // Updated method
     public static <T> Mono<ResponseEntity<T>> handleMonoResponse(T response) {
         return response != null
                 ? Mono.just(ResponseEntity.ok(response))
