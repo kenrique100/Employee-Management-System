@@ -48,5 +48,6 @@ public abstract class BaseUserService<T extends User> implements UserService<T> 
         return userRepository.findById(id).cast(getEntityClass());
     }
 
+
     protected abstract Class<T> getEntityClass();
 }
